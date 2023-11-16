@@ -104,9 +104,9 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
               ChatPolicy: new PolicyDocument({
                 statements: [
                   new PolicyStatement({
-                    actions: ['expertq:ChatSync', 'expertq:SubmitFeedback'],
+                    actions: ['enterpriseq:ChatSync', 'enterpriseq:SubmitFeedback'],
                     // parametrized
-                    resources: [`arn:aws:expertq:*:*:application/${env.EnterpriseQAppId}`]
+                    resources: [`arn:aws:enterpriseq:*:*:application/${env.EnterpriseQAppId}`]
                   })
                 ]
               })

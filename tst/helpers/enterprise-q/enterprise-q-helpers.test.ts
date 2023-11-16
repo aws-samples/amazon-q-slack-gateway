@@ -13,7 +13,7 @@ import {
 
 describe('EnterpriseQ helpers test', () => {
   test('Should get a response as block with context', async () => {
-    const response = await chat('message', MOCK_DEPENDENCIES, MOCK_ENV);
+    const response = await chat('message', [], MOCK_DEPENDENCIES, MOCK_ENV);
     expect(response).toEqual(enterpriseQValidResponse1);
   });
 

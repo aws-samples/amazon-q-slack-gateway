@@ -1,7 +1,7 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
 
-import { ChatResponse } from '@helpers/chat';
+import { ChatContextFile, ChatResponse } from '@helpers/chat';
 import { makeLogger } from '@src/logging';
 import { v4 as uuid } from 'uuid';
 
@@ -30,7 +30,7 @@ export const initEnterpriseQSDK = () => {
   AWS.ExpertQ = AWS.Service.defineService('expertq', ['2023-07-26']);
   Object.defineProperty(AWS.apiLoader.services.expertq, '2023-07-26', {
     get: function get() {
-      const model = require('./expertq.json');
+      const model = require('./enterprise-q.json');
       model.paginators = {};
       return model;
     },
@@ -58,6 +58,7 @@ export const getClient = (env: SlackEventsEnv) => {
 
 export const callClient = async (
   message: string,
+  chatContextFiles: ChatContextFile[],
   env: SlackEventsEnv,
   context?: {
     conversationId: string;
@@ -69,6 +70,7 @@ export const callClient = async (
     userId: env.ENTERPRISE_Q_USER_ID,
     clientToken: uuid(),
     message,
+    ...(chatContextFiles.length > 0 && { chatContextFiles }),
     ...context
   };
 

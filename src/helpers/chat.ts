@@ -9,6 +9,7 @@ import { getItem, putItem } from '@helpers/dynamodb-client';
 import {
   getUserInfo,
   retrieveThreadHistory,
+  retrieveAttachment,
   sendSlackMessage,
   updateSlackMessage
 } from '@helpers/slack/slack-helpers';
@@ -28,6 +29,7 @@ export const chatDependencies = {
   getResponseAsBlocks,
   getFeedbackBlocks,
   retrieveThreadHistory,
+  retrieveAttachment,
   getUserInfo
 };
 
@@ -35,9 +37,15 @@ export type ChatDependencies = typeof chatDependencies;
 
 export type callClient = (
   message: string,
+  chatContextFiles: ChatContextFile[],
   env: SlackEventsEnv,
   context?: { conversationId: string; parentMessageId: string }
 ) => ChatResponse;
+
+export interface ChatContextFile {
+  name: string,
+  data: string,
+}
 
 export type getResponseAsBlocks = (response: ChatResponse) => Block[] | undefined;
 

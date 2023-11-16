@@ -37,6 +37,7 @@ export const MOCK_DEPENDENCIES = {
       ok: true,
       messages: []
     }),
+  retrieveAttachment: () => Promise.resolve("mock attachment"),    
   sendSlackMessage: () => Promise.resolve({} as any),
   updateSlackMessage: () => Promise.resolve({} as any),
   openModal: () => Promise.resolve({} as any),

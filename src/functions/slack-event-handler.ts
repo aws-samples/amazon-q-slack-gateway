@@ -11,6 +11,7 @@ import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
 import { chat } from '@helpers/enterprise-q/enterprise-q-helpers';
 import { UsersInfoResponse } from '@slack/web-api';
+import { ChatContextFile } from '@src/helpers/chat';
 
 const logger = makeLogger('slack-event-handler');
 
@@ -26,6 +27,27 @@ const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
 });
 
 export type SlackEventsEnv = ReturnType<typeof processSlackEventsEnv>;
+
+const MAX_FILE_ATTACHMENTS = 5
+const SUPPORTED_FILE_TYPES = ['text', 'html', 'xml', 'markdown', 'csv', 'json', 'xls', 'xlsx', 'ppt', 'pptx', 'doc', 'docx', 'rtf', 'pdf'];
+const attachFiles = async(slackEventsEnv: SlackEventsEnv, files: any[]): Promise<ChatContextFile[]> => {
+  const newChatContextFiles: ChatContextFile[] = []
+  for (const f of files) {
+    // Check if the file type is supported
+    if (SUPPORTED_FILE_TYPES.includes(f.filetype)) {
+      newChatContextFiles.push({
+        name: f.name,
+        data: await chatDependencies.retrieveAttachment(
+          slackEventsEnv,
+          f.url_private_download
+        )
+      });
+    } else {
+      logger.debug(`Ignoring file attachment with unsupported filetype '${f.filetype}' - not one of '${SUPPORTED_FILE_TYPES}'`);
+    }
+  }
+  return newChatContextFiles;
+}
 
 export const handler = async (
   event: {
@@ -126,6 +148,7 @@ export const handler = async (
     parentMessageId: channelMetadata?.messageId
   };
 
+  let chatContextFiles: ChatContextFile[] = [];  
   const input = [];
   const userInformationCache: Record<string, UsersInfoResponse> = {};
   const stripMentions = (text?: string) => text?.replace(/<@[A-Z0-9]+>/g, '').trim();
@@ -139,8 +162,10 @@ export const handler = async (
 
     if (threadHistory.ok && !isEmpty(threadHistory.messages)) {
       const promptConversationHistory = [];
-      // Keep this sequential as we are using an in memory map to avoid useless call
-      for (const m of threadHistory.messages) {
+      // The last message in the threadHistory result is also the current message, so 
+      // to avoid duplicating chatHistory with the current message we skip the 
+      // last element in threadHistory message array.
+      for (const m of threadHistory.messages.slice(0,-1)) {
         if (isEmpty(m.user)) {
           continue;
         }
@@ -154,6 +179,10 @@ export const handler = async (
           message: stripMentions(m.text),
           date: !isEmpty(m.ts) ? new Date(Number(m.ts) * 1000).toISOString() : undefined
         });
+
+        if (!isEmpty(m.files)) {
+          chatContextFiles.push(...await attachFiles(slackEventsEnv, m.files));
+        }
       }
 
       if (promptConversationHistory.length > 0) {
@@ -162,7 +191,7 @@ export const handler = async (
         context.parentMessageId = undefined;
 
         input.push(
-          `Given that following conversation thread history in JSON:\n${JSON.stringify(
+          `Given the following conversation thread history in JSON:\n${JSON.stringify(
             promptConversationHistory
           )}`
         );
@@ -172,8 +201,19 @@ export const handler = async (
 
   input.push(stripMentions(body.event.text));
   const prompt = input.join(`\n${'-'.repeat(10)}\n`);
+
+  // attach files (if any) from current message
+  if (!isEmpty(body.event.files)) {
+    chatContextFiles.push(...await attachFiles(slackEventsEnv, body.event.files));
+  }
+  // Limit file attachments to the last MAX_FILE_ATTACHMENTS
+  if (chatContextFiles.length > MAX_FILE_ATTACHMENTS) {
+    logger.debug(`Too many attached files (${chatContextFiles.length}). Attaching the last ${MAX_FILE_ATTACHMENTS} files.`)
+    chatContextFiles = chatContextFiles.slice(-MAX_FILE_ATTACHMENTS);
+  }
+
   const [output, slackMessage] = await Promise.all([
-    chat(prompt, dependencies, slackEventsEnv, context),
+    chat(prompt, chatContextFiles, dependencies, slackEventsEnv, context),
     dependencies.sendSlackMessage(
       slackEventsEnv,
       body.event.channel,
