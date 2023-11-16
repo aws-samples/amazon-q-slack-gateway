@@ -3,7 +3,7 @@ import { createButton, getMarkdownBlocks, SLACK_ACTION } from '@helpers/slack/sl
 import { EnterpriseQResponse } from '@helpers/enterprise-q/enterprise-q-client';
 import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
-import { ChatDependencies } from '@src/helpers/chat';
+import { ChatDependencies, ChatContextFile } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
 
 const logger = makeLogger('enterprise-q-helpers');
@@ -14,6 +14,7 @@ const WARN_TRUNCATED = `| Please note that you do not have all the conversation 
 
 export const chat = async (
   incomingMessage: string,
+  chatContextFiles: ChatContextFile[],
   dependencies: ChatDependencies,
   env: SlackEventsEnv,
   context?: {
@@ -31,7 +32,7 @@ export const chat = async (
           ) + WARN_TRUNCATED
         : incomingMessage;
 
-    const response = await dependencies.callClient(inputMessage, env, context);
+    const response = await dependencies.callClient(inputMessage, chatContextFiles, env, context);
     logger.debug(`EnterpriseQ chatSync response: ${JSON.stringify(response)}`);
     return response;
   } catch (error) {
@@ -40,8 +41,6 @@ export const chat = async (
   }
 };
 
-// Adapted from ../bot-helpers.ts - placed here since it is EnterpriseQ specific..
-// Discuss if bot-helpers.ts should be merged with ../lex/lex-helpers.ts
 export const getResponseAsBlocks = (response: EnterpriseQResponse) => {
   if (isEmpty(response.textMessage)) {
     return [];

@@ -22,7 +22,8 @@
         "channels:history",
         "app_mentions:read",
         "users:read",
-        "groups:history"
+        "groups:history",
+        "files:read"
       ]
     }
   },

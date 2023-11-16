@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { SecretsManager } from 'aws-sdk';
 import { Block, ChatPostMessageResponse, ModalView, WebClient } from '@slack/web-api';
@@ -56,6 +57,26 @@ export const retrieveThreadHistory = async (
 
   return response;
 };
+
+export const retrieveAttachment = async (
+  env: SlackInteractionsEnv | SlackEventsEnv,
+  url: string
+) => {
+  const secret = await getSlackSecret(env);
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${secret.SlackBotUserOAuthToken}`
+    },
+    responseType: 'arraybuffer' // Important for handling binary files
+  });
+
+  // Convert the response data to a base64 string
+  const base64String = Buffer.from(response.data, 'binary').toString('base64');
+
+  logger.debug(`retrieveAttachment from ${url}: ${base64String.substring(0, 300)}`);
+  return base64String;
+};
+
 export const sendSlackMessage = async (
   env: SlackInteractionsEnv | SlackEventsEnv,
   channel: string,

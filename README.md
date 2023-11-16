@@ -22,7 +22,7 @@ It's easy to deploy in your own AWS Account, and add to your own Slack Workspace
 - Provides Source Attribution - see references to sources used by [[AWS Enterprise Q]]
 - Aware of conversation context - it tracks the conversation and applies context
 - Aware of multiple users - when it's tagged in a thread, it knows who said what, and when - so it can contribute in context and accurately summarize the thread when asked.  
-- *Process attached files for document question answering, summaries, etc. (pending)*
+- Process up to 5 attached files for document question answering, summaries, etc. 
 
 This sample [[AWS Enterprise Q]] slack application is provided as open source — use it as a starting point for your own solution, and help us make it better by contributing back fixes and features via GitHub pull requests. Explore the code, choose Watch to be notified of new releases, and check back for the latest  updates.
 
@@ -99,11 +99,3 @@ Let's configure your Slack secrets in order to (1) verify the signature of each 
 
 1. Go to Slack
 2. Write a message to your bot
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
