@@ -1,0 +1,45 @@
+{
+  "display_information": {
+    "name": "!!! [SlackBotName] !!!",
+    "description": "This is an example of a Slack app interfacing with ExpertQ using AWS CDK.",
+    "background_color": "#1d7c00"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "!!! [SlackBotName] !!!",
+      "always_online": true
+    }
+  },
+  "oauth_config": {
+    "redirect_urls": [
+      "!!! [SlackEventHandlerApiOutput] !!!"
+    ],
+    "scopes": {
+      "bot": [
+        "im:history",
+        "chat:write",
+        "im:read",
+        "channels:history",
+        "app_mentions:read",
+        "users:read",
+        "groups:history"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "request_url": "!!! [SlackEventHandlerApiOutput] !!!",
+      "bot_events": [
+        "app_mention",
+        "message.im"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "!!! [SlackInteractionHandlerApiOutput] !!!"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}

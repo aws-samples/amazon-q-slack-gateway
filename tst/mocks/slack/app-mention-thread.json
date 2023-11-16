@@ -1,0 +1,53 @@
+{
+  "token": "sJ5QIJFwDrymvHxcq9ec0aWL",
+  "team_id": "T044E46HKJ6",
+  "enterprise_id": "E01C2B11VN2",
+  "api_app_id": "A05SC845KRN",
+  "event": {
+    "client_msg_id": "4a70e6ef-349e-4db4-af22-7c22f9800551",
+    "type": "app_mention",
+    "text": "<@U05R8PST0H5> please answer",
+    "user": "U043ZH2AG95",
+    "ts": "1696251625.803109",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "h3d",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "user",
+                "user_id": "U05R8PST0H5"
+              },
+              {
+                "type": "text",
+                "text": " please answer"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "team": "T044E46HKJ6",
+    "thread_ts": "1696251609.158979",
+    "parent_user_id": "U043ZH2AG95",
+    "channel": "C05URD5PT43",
+    "event_ts": "1696251625.803109"
+  },
+  "type": "event_callback",
+  "event_id": "Ev05V47HQ6C9",
+  "event_time": 1696251625,
+  "authorizations": [
+    {
+      "enterprise_id": "E01C2B11VN2",
+      "team_id": "T044E46HKJ6",
+      "user_id": "U05R8PST0H5",
+      "is_bot": true,
+      "is_enterprise_install": false
+    }
+  ],
+  "is_ext_shared_channel": false,
+  "event_context": "4-eyJldCI6ImFwcF9tZW50aW9uIiwidGlkIjoiVDA0NEU0NkhLSjYiLCJhaWQiOiJBMDVTQzg0NUtSTiIsImNpZCI6IkMwNVVSRDVQVDQzIn0"
+}
