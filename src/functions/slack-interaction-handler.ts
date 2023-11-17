@@ -100,9 +100,9 @@ export const handler = async (
     )) as EnterpriseQResponse;
     if (
       id === SLACK_ACTION[SLACK_ACTION.VIEW_SOURCES] &&
-      !isEmpty(messageMetadata?.sourceAttribution)
+      !isEmpty(messageMetadata?.sourceAttributions)
     ) {
-      const modal = createModal('Source(s)', messageMetadata.sourceAttribution);
+      const modal = createModal('Source(s)', messageMetadata.sourceAttributions);
 
       await dependencies.openModal(
         slackInteractionsEnv,
@@ -118,8 +118,8 @@ export const handler = async (
         slackInteractionsEnv,
         {
           conversationId: messageMetadata.conversationId,
-          humanMessageId: messageMetadata.humanMessageId,
-          aiMessageId: messageMetadata.aiMessageId
+          userMessageId: messageMetadata.userMessageId,
+          systemMessageId: messageMetadata.systemMessageId
         },
         id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ? 'RELEVANT' : 'NOT_RELEVANT',
         payload.message.ts

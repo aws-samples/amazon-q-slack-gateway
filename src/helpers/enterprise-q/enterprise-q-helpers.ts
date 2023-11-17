@@ -42,11 +42,11 @@ export const chat = async (
 };
 
 export const getResponseAsBlocks = (response: EnterpriseQResponse) => {
-  if (isEmpty(response.textMessage)) {
+  if (isEmpty(response.systemMessage)) {
     return [];
   }
 
-  const content = response.textMessage;
+  const content = response.systemMessage;
 
   return [
     ...(!hasTable(content)
@@ -54,8 +54,8 @@ export const getResponseAsBlocks = (response: EnterpriseQResponse) => {
       : getMarkdownBlocks(
           `${convertHN(getTablePrefix(content))}\n\n${parseTable(getTable(content))}`
         )),
-    ...(!isEmpty(response.sourceAttribution)
-      ? [createButton('View source(s)', response.messageId)]
+    ...(!isEmpty(response.sourceAttributions)
+      ? [createButton('View source(s)', response.systemMessageId)]
       : [])
   ];
 };
@@ -63,7 +63,7 @@ export const getResponseAsBlocks = (response: EnterpriseQResponse) => {
 export const getFeedbackBlocks = (response: EnterpriseQResponse): Block[] => [
   {
     type: 'actions',
-    block_id: `feedback-${response.conversationId}-${response.messageId}`,
+    block_id: `feedback-${response.conversationId}-${response.systemMessageId}`,
     elements: [
       {
         type: 'button',
@@ -74,7 +74,7 @@ export const getFeedbackBlocks = (response: EnterpriseQResponse): Block[] => [
         },
         style: 'primary',
         action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP],
-        value: response.messageId
+        value: response.systemMessageId
       },
       {
         type: 'button',
@@ -85,7 +85,7 @@ export const getFeedbackBlocks = (response: EnterpriseQResponse): Block[] => [
         },
         style: 'danger',
         action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN],
-        value: response.messageId
+        value: response.systemMessageId
       }
     ]
   } as Block
