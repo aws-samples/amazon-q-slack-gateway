@@ -165,7 +165,7 @@ describe('Slack event handler test', () => {
           Promise.resolve({
             Item: {
               conversationId: 'conversationId',
-              messageId: 'parentMessageId'
+              parentMessageId: 'parentMessageId'
             },
             ...MOCK_AWS_RESPONSE
           })
@@ -205,7 +205,7 @@ describe('Slack event handler test', () => {
           Promise.resolve({
             Item: {
               conversationId: 'conversationId',
-              messageId: 'parentMessageId'
+              parentMessageId: 'parentMessageId'
             },
             ...MOCK_AWS_RESPONSE
           })
@@ -230,7 +230,7 @@ describe('Slack event handler test', () => {
       },
       {
         type: 'actions',
-        block_id: `feedback-${enterpriseQValidResponse2TextSimple.conversationId}-${enterpriseQValidResponse2TextSimple.messageId}`,
+        block_id: `feedback-${enterpriseQValidResponse2TextSimple.conversationId}-${enterpriseQValidResponse2TextSimple.systemMessageId}`,
         elements: [
           {
             type: 'button',
@@ -241,7 +241,7 @@ describe('Slack event handler test', () => {
             },
             style: 'primary',
             action_id: 'FEEDBACK_UP',
-            value: enterpriseQValidResponse2TextSimple.messageId
+            value: enterpriseQValidResponse2TextSimple.systemMessageId
           },
           {
             type: 'button',
@@ -252,7 +252,7 @@ describe('Slack event handler test', () => {
             },
             style: 'danger',
             action_id: 'FEEDBACK_DOWN',
-            value: enterpriseQValidResponse2TextSimple.messageId
+            value: enterpriseQValidResponse2TextSimple.systemMessageId
           }
         ]
       }
@@ -281,7 +281,7 @@ describe('Slack event handler test', () => {
           Promise.resolve({
             Item: {
               conversationId: 'conversationId',
-              messageId: 'parentMessageId'
+              parentMessageId: 'parentMessageId'
             },
             ...MOCK_AWS_RESPONSE
           })
@@ -370,7 +370,7 @@ describe('Slack event handler test', () => {
           Promise.resolve({
             Item: {
               conversationId: 'conversationId',
-              messageId: 'parentMessageId'
+              parentMessageId: 'parentMessageId'
             },
             ...MOCK_AWS_RESPONSE
           })
@@ -387,10 +387,9 @@ describe('Slack event handler test', () => {
       output: {
         textMessage: 'This is a simple text\n and now with a \n### header\n# another header',
         conversationId: '80a6642c-8b3d-433e-a9cb-233b42a0d63a',
-        sourceAttribution: [],
-        messageId: 'e5a23752-3f31-4fee-83fe-56fbd7803540',
-        aiMessageId: 'e5a23752-3f31-4fee-83fe-56fbd7803540',
-        humanMessageId: '616fefbc-48bc-442d-a618-497bbbde3d66'
+        sourceAttributions: [],
+        systemMessageId: 'e5a23752-3f31-4fee-83fe-56fbd7803540',
+        userMessageId: '616fefbc-48bc-442d-a618-497bbbde3d66'
       },
       blocks: [
         {

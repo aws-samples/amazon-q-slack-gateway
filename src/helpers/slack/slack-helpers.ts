@@ -169,7 +169,7 @@ export enum SLACK_ACTION {
   FEEDBACK_UP
 }
 
-export const createButton = (text: string, messageId: string) => ({
+export const createButton = (text: string, systemMessageId: string) => ({
   type: 'actions',
   elements: [
     {
@@ -180,7 +180,7 @@ export const createButton = (text: string, messageId: string) => ({
         emoji: true
       },
       style: 'primary',
-      value: messageId,
+      value: systemMessageId,
       action_id: SLACK_ACTION[SLACK_ACTION.VIEW_SOURCES]
     }
   ]

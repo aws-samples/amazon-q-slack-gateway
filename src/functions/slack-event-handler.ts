@@ -145,7 +145,7 @@ export const handler = async (
 
   const context = {
     conversationId: channelMetadata?.conversationId,
-    parentMessageId: channelMetadata?.messageId
+    parentMessageId: channelMetadata?.systemMessageId
   };
 
   let chatContextFiles: ChatContextFile[] = [];  
@@ -246,7 +246,7 @@ export const handler = async (
     saveChannelMetadata(
       channelKey,
       output.conversationId,
-      output.messageId,
+      output.systemMessageId,
       dependencies,
       slackEventsEnv
     ),
@@ -254,7 +254,7 @@ export const handler = async (
     dependencies.updateSlackMessage(
       slackEventsEnv,
       slackMessage,
-      output.textMessage,
+      output.systemMessage,
       dependencies.getResponseAsBlocks(output)
     )
   ]);

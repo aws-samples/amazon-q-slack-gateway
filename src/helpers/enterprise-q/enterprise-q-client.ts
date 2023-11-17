@@ -13,22 +13,29 @@ const logger = makeLogger('enterprise-q-client');
 
 export interface EnterpriseQResponse extends ChatResponse {
   conversationId: string;
-  messageId: string;
-  aiMessageId: string;
-  humanMessageId: string;
-  sourceAttribution?: SourceAttribution[];
+  systemMessageId: string;
+  userMessageId: string;
+  sourceAttributions?: SourceAttribution[];
 }
 
 export interface SourceAttribution {
   title?: string;
   snippet?: string;
   url?: string;
+  citationNumber?: number;
+  updatedAt?: string;
+  textMessageSegments?: TextSegment[];
+}
+
+export interface TextSegment {
+  beginOffset?: number;
+  endOffset?: number;
 }
 
 export const initEnterpriseQSDK = () => {
   AWS.apiLoader.services.expertq = {};
-  AWS.ExpertQ = AWS.Service.defineService('expertq', ['2023-07-26']);
-  Object.defineProperty(AWS.apiLoader.services.expertq, '2023-07-26', {
+  AWS.ExpertQ = AWS.Service.defineService('expertq', ['2023-11-27']);
+  Object.defineProperty(AWS.apiLoader.services.expertq, '2023-11-27', {
     get: function get() {
       const model = require('./enterprise-q.json');
       model.paginators = {};
@@ -39,7 +46,6 @@ export const initEnterpriseQSDK = () => {
   });
 };
 
-// The any here makes me sad but we do not have a typed def file yet
 let enterpriseQClient: unknown = null;
 export const getClient = (env: SlackEventsEnv) => {
   if (enterpriseQClient === null) {
@@ -69,7 +75,7 @@ export const callClient = async (
     applicationId: env.ENTERPRISE_Q_APP_ID,
     userId: env.ENTERPRISE_Q_USER_ID,
     clientToken: uuid(),
-    message,
+    userMessage: message,
     ...(chatContextFiles.length > 0 && { chatContextFiles }),
     ...context
   };
@@ -82,8 +88,8 @@ export const submitFeedbackRequest = async (
   env: SlackInteractionsEnv,
   context: {
     conversationId: string;
-    humanMessageId: string;
-    aiMessageId: string;
+    userMessageId: string;
+    systemMessageId: string;
   },
   relevanceValue: 'NOT_RELEVANT' | 'RELEVANT',
   time: string

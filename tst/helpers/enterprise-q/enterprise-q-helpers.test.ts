@@ -58,10 +58,10 @@ describe('EnterpriseQ helpers test', () => {
   });
 
   test('Test table markdown', async () => {
-    const prefix = getTablePrefix(enterpriseQValidResponse1.textMessage);
-    expect(hasTable(enterpriseQValidResponse1.textMessage)).toBeTruthy();
+    const prefix = getTablePrefix(enterpriseQValidResponse1.systemMessage);
+    expect(hasTable(enterpriseQValidResponse1.systemMessage)).toBeTruthy();
 
-    const table = getTable(enterpriseQValidResponse1.textMessage);
+    const table = getTable(enterpriseQValidResponse1.systemMessage);
     const parsedTable = parseTable(table);
 
     expect(prefix).toEqual('# The Pillars of the Well Architected Framework');

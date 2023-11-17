@@ -16,7 +16,7 @@ import {
 import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/enterprise-q/enterprise-q-helpers';
 
 export interface ChatResponse {
-  textMessage: string;
+  systemMessage: string;
 }
 
 export const chatDependencies = {
@@ -74,7 +74,7 @@ export const getChannelMetadata = async (
 export const saveChannelMetadata = async (
   channel: string,
   conversationId: string,
-  messageId: string,
+  systemMessageId: string,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) =>
@@ -83,7 +83,7 @@ export const saveChannelMetadata = async (
     Item: {
       channel,
       conversationId,
-      messageId,
+      systemMessageId,
       latestTs: Date.now()
     }
   });
@@ -96,17 +96,17 @@ export const saveMessageMetadata = async (
   await dependencies.putItem({
     TableName: env.MESSAGE_METADATA_TABLE_NAME,
     Item: {
-      messageId: enterpriseQResponse.messageId,
+      messageId: enterpriseQResponse.systemMessageId,
       conversationId: enterpriseQResponse.conversationId,
-      sourceAttribution: enterpriseQResponse.sourceAttribution,
-      aiMessageId: enterpriseQResponse.aiMessageId,
-      humanMessageId: enterpriseQResponse.humanMessageId,
+      sourceAttributions: enterpriseQResponse.sourceAttributions,
+      systemMessageId: enterpriseQResponse.systemMessageId,
+      userMessageId: enterpriseQResponse.userMessageId,
       ts: Date.now()
     }
   });
 
 export const getMessageMetadata = async (
-  messageId: string,
+  systemMessageId: string,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) =>
@@ -114,7 +114,7 @@ export const getMessageMetadata = async (
     await dependencies.getItem({
       TableName: env.MESSAGE_METADATA_TABLE_NAME,
       Key: {
-        messageId
+        messageId: systemMessageId
       }
     })
   ).Item;
