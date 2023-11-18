@@ -18,7 +18,7 @@ const processSlackInteractionsEnv = (env: NodeJS.ProcessEnv) => ({
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
   ENTERPRISE_Q_ENDPOINT: env.ENTERPRISE_Q_ENDPOINT,
   ENTERPRISE_Q_APP_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_APP_ID),
-  ENTERPRISE_Q_USER_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_USER_ID),
+  ENTERPRISE_Q_USER_ID: env.ENTERPRISE_Q_USER_ID,
   ENTERPRISE_Q_REGION: getOrThrowIfEmpty(env.ENTERPRISE_Q_REGION),
   CONTEXT_DAYS_TO_LIVE: getOrThrowIfEmpty(env.CONTEXT_DAYS_TO_LIVE),
   CACHE_TABLE_NAME: getOrThrowIfEmpty(env.CACHE_TABLE_NAME),
@@ -68,7 +68,7 @@ export const handler = async (
   }
 
   const payload = JSON.parse(payloadParam);
-  logger.debug(JSON.stringify(payload));
+  logger.debug(`Received event payload: ${JSON.stringify(payload)}`);
 
   if (payload.type !== 'block_actions') {
     return { statusCode: 200, body: 'Not a block action payload. Not implemented. Nothing to do' };
@@ -115,6 +115,18 @@ export const handler = async (
       id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ||
       id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN]
     ) {
+      if (slackInteractionsEnv.ENTERPRISE_Q_USER_ID === "") {
+        // No default/proxy userId
+        const userInfo = await dependencies.getUserInfo(slackInteractionsEnv, payload.user.id);
+        const userEmail: string = userInfo.user?.profile?.email || '';
+        if (userEmail === '') {
+          throw new Error(`User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
+        }
+        slackInteractionsEnv.ENTERPRISE_Q_USER_ID = userEmail;
+        logger.debug(`User email (${userEmail}) used as Amazon Q userId`)
+      } else {
+        logger.debug(`Proxy User ID configured. ENTERPRISE_Q_USER_ID = ${slackInteractionsEnv.ENTERPRISE_Q_USER_ID}`);
+      }
       await dependencies.submitFeedbackRequest(
         slackInteractionsEnv,
         {
