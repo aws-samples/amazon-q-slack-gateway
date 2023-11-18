@@ -120,7 +120,7 @@ export const handler = async (
         const userInfo = await dependencies.getUserInfo(slackInteractionsEnv, payload.user.id);
         const userEmail: string = userInfo.user?.profile?.email || '';
         if (userEmail === '') {
-          throw new Error(`User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
+          logger.error(`ERROR: User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
         }
         slackInteractionsEnv.ENTERPRISE_Q_USER_ID = userEmail;
         logger.debug(`User email (${userEmail}) used as Amazon Q userId`)

@@ -159,7 +159,7 @@ export const handler = async (
     // Use slack user email as Q UserId
     const userEmail: string = userInformationCache[body.event.user].user?.profile?.email || '';
     if (userEmail === '') {
-      throw new Error(`User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
+      logger.error(`ERROR: User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
     }
     slackEventsEnv.ENTERPRISE_Q_USER_ID = userEmail;
     logger.debug(`User's email (${userEmail}) used as Amazon Q userId.`)
