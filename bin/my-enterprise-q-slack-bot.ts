@@ -10,6 +10,7 @@ export interface StackEnvironment {
   EnterpriseQUserId: string
   EnterpriseQRegion: string;
   EnterpriseQEndpoint?: string;
+  ContextDaysToLive: string;
 }
 
 const app = new cdk.App();
@@ -21,6 +22,7 @@ if (environment.StackName === undefined) { throw new Error("StackName is require
 if (environment.EnterpriseQAppId === undefined) { throw new Error("EnterpriseQAppId is required"); }
 if (environment.EnterpriseQRegion === undefined) { throw new Error("EnterpriseQRegion is required"); }
 if (environment.EnterpriseQUserId === undefined) { throw new Error("EnterpriseQUserId is required"); }
+if (environment.ContextDaysToLive === undefined) { throw new Error("ContextDaysToLive is required"); }
 
 new MyEnterpriseQSlackBotStack(app, 'MyLexSlackBotStack', {
   stackName: environment.StackName,
