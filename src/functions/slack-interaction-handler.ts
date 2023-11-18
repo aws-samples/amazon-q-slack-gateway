@@ -118,10 +118,10 @@ export const handler = async (
         slackInteractionsEnv,
         {
           conversationId: messageMetadata.conversationId,
-          userMessageId: messageMetadata.userMessageId,
-          systemMessageId: messageMetadata.systemMessageId
+          messageId: messageMetadata.systemMessageId,
         },
-        id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ? 'RELEVANT' : 'NOT_RELEVANT',
+        id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ? 'USEFUL' : 'NOT_USEFUL',
+        id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ? 'HELPFUL' : 'NOT_HELPFUL',
         payload.message.ts
       );
 

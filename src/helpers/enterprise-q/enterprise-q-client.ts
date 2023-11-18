@@ -88,28 +88,26 @@ export const submitFeedbackRequest = async (
   env: SlackInteractionsEnv,
   context: {
     conversationId: string;
-    userMessageId: string;
-    systemMessageId: string;
+    messageId: string;
   },
-  relevanceValue: 'NOT_RELEVANT' | 'RELEVANT',
-  time: string
+  usefulness: 'USEFUL' | 'NOT_USEFUL',
+  reason: 'HELPFUL' | 'NOT_HELPFUL',
+  submittedAt: string
 ): Promise<void> => {
   const input = {
     applicationId: env.ENTERPRISE_Q_APP_ID,
-    model: {
-      queryRewriting: 'anthropic.claude-v2',
-      questionAnswer: 'anthropic.claude-v2'
-    },
-    relevanceFeedback: {
-      relevanceValue,
-      time: Number(time)
-    },
-    ...context
+    userId: env.ENTERPRISE_Q_USER_ID,
+    ...context,
+    messageUsefulness: {
+      usefulness: usefulness,
+      reason: reason,
+      submittedAt: Number(submittedAt)
+    }
   };
 
-  logger.debug(`submitFeedbackRequest input ${JSON.stringify(input)}`);
-  const response = await (getClient(env) as any).submitFeedback(input).promise();
-  logger.debug(`submitFeedbackRequest output ${JSON.stringify(response)}`);
+  logger.debug(`putFeedbackRequest input ${JSON.stringify(input)}`);
+  const response = await (getClient(env) as any).putFeedback(input).promise();
+  logger.debug(`putFeedbackRequest output ${JSON.stringify(response)}`);
 
   return response;
 };
