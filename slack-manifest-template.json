@@ -12,7 +12,7 @@
     "slash_commands": [
       {
           "command": "/new_conversation",
-          "url": "!!! [SlackEventHandlerApiOutput] !!!",
+          "url": "!!! [SlackCommandApiOutput] !!!",
           "description": "Start a new conversation",
           "should_escape": false
       }

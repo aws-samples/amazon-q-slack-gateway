@@ -2,7 +2,6 @@ import { APIGatewayProxyResult, Callback, Context } from 'aws-lambda';
 import { ERROR_MSG, getMarkdownBlock, validateSlackRequest } from '@helpers/slack/slack-helpers';
 import {
   chatDependencies,
-  deleteChannelMetadata,
   getChannelKey,
   getChannelMetadata,
   saveChannelMetadata,
@@ -90,21 +89,8 @@ export const handler = async (
     };
   }
 
-  // body is JSON for messages; body is a url encoded string for slash commands. Decode either.
-  let body;
-  try {
-    // Try to parse as JSON (message)
-    body = JSON.parse(event.body);
-    logger.debug(`Received message body ${JSON.stringify(body)}`);
-  } catch (e) {
-    // JSON parsing failed, try URL encoding (slash-command)
-    body = event.body.split('&').reduce((obj, pair) => {
-      const [key, value] = pair.split('=').map(decodeURIComponent);
-      obj[key] = value;
-      return obj;
-    }, {} as Record<string, any>);
-    logger.debug(`Received slash command body ${JSON.stringify(body)}`);
-  }
+  const body = JSON.parse(event.body);
+  logger.debug(`Received message body ${JSON.stringify(body)}`);
 
   // Read why it is needed: https://api.slack.com/events/url_verification
   if (!isEmpty(body.challenge)) {
@@ -123,34 +109,6 @@ export const handler = async (
       body: JSON.stringify({
         error: `Ignoring retry event: Retry-Reason '${retry_reason}', Retry-Num '${retry_num}`
       })
-    };
-  }
-
-  // handle slash commands
-  if (!isEmpty(body.command)) {
-    let commandStatus;
-    if (body.command === '/new_conversation') {
-      const channelKey = getChannelKey('message', body.team_id, body.channel_id, "n/a");
-      logger.debug(`Slash command: ${body.command} - deleting channel metadata for '${channelKey}'`)
-      await deleteChannelMetadata(
-        channelKey,
-        dependencies,
-        slackEventsEnv
-      )
-      await dependencies.sendSlackMessage(
-        slackEventsEnv,
-        body.channel_id,
-        `Starting New Conversation`,
-        [getMarkdownBlock(`_*Starting New Conversation*_`)]
-      );
-      commandStatus = 'OK'
-    } else {
-      logger.error(`ERROR - unsupported slash command: ${body.command}`);
-      commandStatus = 'Unsupported'
-    }
-    return {
-      statusCode: 200,
-      body: `${body.command} - ${commandStatus}`
     };
   }
 
