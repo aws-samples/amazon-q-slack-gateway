@@ -115,18 +115,13 @@ export const handler = async (
       id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ||
       id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN]
     ) {
-      if (slackInteractionsEnv.ENTERPRISE_Q_USER_ID === "") {
-        // No default/proxy userId
-        const userInfo = await dependencies.getUserInfo(slackInteractionsEnv, payload.user.id);
-        const userEmail: string = userInfo.user?.profile?.email || '';
-        if (userEmail === '') {
-          logger.error(`ERROR: User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
-        }
+      if (isEmpty(slackInteractionsEnv.ENTERPRISE_Q_USER_ID)) {
+        // Use slack user email as Q UserId
+        const userEmail = (await dependencies.getUserInfo(slackInteractionsEnv, payload.user.id)).user?.profile?.email;
         slackInteractionsEnv.ENTERPRISE_Q_USER_ID = userEmail;
-        logger.debug(`User email (${userEmail}) used as Amazon Q userId`)
-      } else {
-        logger.debug(`Proxy User ID configured. ENTERPRISE_Q_USER_ID = ${slackInteractionsEnv.ENTERPRISE_Q_USER_ID}`);
+        logger.debug(`User's email (${userEmail}) used as Amazon Q userId, since EnterpriseQUserId is empty.`)
       }
+
       await dependencies.submitFeedbackRequest(
         slackInteractionsEnv,
         {

@@ -155,16 +155,11 @@ export const handler = async (
   if (isEmpty(userInformationCache[body.event.user])) {
     userInformationCache[body.event.user] = await dependencies.getUserInfo(slackEventsEnv, body.event.user);
   }
-  if (slackEventsEnv.ENTERPRISE_Q_USER_ID === "") {
+  if (isEmpty(slackEventsEnv.ENTERPRISE_Q_USER_ID)) {
     // Use slack user email as Q UserId
-    const userEmail: string = userInformationCache[body.event.user].user?.profile?.email || '';
-    if (userEmail === '') {
-      logger.error(`ERROR: User's email is undefined/unavailable but required when ENTERPRISE_Q_USER_ID is empty.`);  
-    }
+    const userEmail = userInformationCache[body.event.user].user?.profile?.email;
     slackEventsEnv.ENTERPRISE_Q_USER_ID = userEmail;
-    logger.debug(`User's email (${userEmail}) used as Amazon Q userId.`)
-  } else {
-    logger.debug(`Proxy User ID configured. ENTERPRISE_Q_USER_ID = ${slackEventsEnv.ENTERPRISE_Q_USER_ID}`);
+    logger.debug(`User's email (${userEmail}) used as Amazon Q userId, since EnterpriseQUserId is empty.`)
   }
 
   if (!isEmpty(body.event.thread_ts)) {
