@@ -8,7 +8,15 @@
     "bot_user": {
       "display_name": "!!! [SlackBotName] !!!",
       "always_online": true
-    }
+    },
+    "slash_commands": [
+      {
+          "command": "/new_conversation",
+          "url": "!!! [SlackEventHandlerApiOutput] !!!",
+          "description": "Start a new conversation",
+          "should_escape": false
+      }
+    ]
   },
   "oauth_config": {
     "redirect_urls": [
@@ -16,14 +24,16 @@
     ],
     "scopes": {
       "bot": [
-        "im:history",
-        "chat:write",
-        "im:read",
-        "channels:history",
         "app_mentions:read",
-        "users:read",
+        "channels:history",
+        "chat:write",
+        "files:read",
         "groups:history",
-        "files:read"
+        "im:history",
+        "im:read",
+        "users:read",
+        "users:read.email",
+        "commands"
       ]
     }
   },

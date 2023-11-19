@@ -22,6 +22,6 @@ if (environment.EnterpriseQAppId === undefined) { throw new Error("EnterpriseQAp
 if (environment.EnterpriseQRegion === undefined) { throw new Error("EnterpriseQRegion is required"); }
 if (environment.EnterpriseQUserId === undefined) { throw new Error("EnterpriseQUserId is required"); }
 
-new MyEnterpriseQSlackBotStack(app, 'MyLexSlackBotStack', {
+new MyEnterpriseQSlackBotStack(app, 'AmazonQSlackGatewayStack', {
   stackName: environment.StackName,
 }, environment);

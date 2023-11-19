@@ -2,6 +2,7 @@ import { APIGatewayProxyResult, Callback, Context } from 'aws-lambda';
 import { ERROR_MSG, getMarkdownBlock, validateSlackRequest } from '@helpers/slack/slack-helpers';
 import {
   chatDependencies,
+  deleteChannelMetadata,
   getChannelKey,
   getChannelMetadata,
   saveChannelMetadata,
@@ -88,16 +89,26 @@ export const handler = async (
     };
   }
 
-  const body = JSON.parse(event.body);
-  logger.debug(`Received body ${JSON.stringify(body)}`);
+  // body is JSON for messages; body is a url encoded string for slash commands. Decode either.
+  let body;
+  try {
+    // Try to parse as JSON (message)
+    body = JSON.parse(event.body);
+    logger.debug(`Received message body ${JSON.stringify(body)}`);
+  } catch (e) {
+    // JSON parsing failed, try URL encoding (slash-command)
+    body = event.body.split('&').reduce((obj, pair) => {
+      const [key, value] = pair.split('=').map(decodeURIComponent);
+      obj[key] = value;
+      return obj;
+    }, {} as Record<string, any>);
+    logger.debug(`Received slash command body ${JSON.stringify(body)}`);
+  }
 
   // Read why it is needed: https://api.slack.com/events/url_verification
   if (!isEmpty(body.challenge)) {
     return { statusCode: 200, body: body.challenge };
   }
-
-  // You can extend this lambda to handle more event type
-  logger.debug(`Received event ${JSON.stringify(body.event)}`);
 
   if (!isEmpty(event.headers['X-Slack-Retry-Reason'])) {
     const retry_reason = event.headers['X-Slack-Retry-Reason'];
@@ -114,6 +125,35 @@ export const handler = async (
     };
   }
 
+  // handle slash commands
+  if (!isEmpty(body.command)) {
+    let commandStatus;
+    if (body.command === '/new_conversation') {
+      const channelKey = getChannelKey('message', body.team_id, body.channel_id, "n/a");
+      logger.debug(`Slash command: ${body.command} - deleting channel metadata for '${channelKey}'`)
+      await deleteChannelMetadata(
+        channelKey,
+        dependencies,
+        slackEventsEnv
+      )
+      await dependencies.sendSlackMessage(
+        slackEventsEnv,
+        body.channel_id,
+        `Starting New Conversation`,
+        [getMarkdownBlock(`_*Starting New Conversation*_`)]
+      );
+      commandStatus = 'OK'
+    } else {
+      logger.error(`ERROR - unsupported slash command: ${body.command}`);
+      commandStatus = 'Unsupported'
+    }
+    return {
+      statusCode: 200,
+      body: `${body.command} - ${commandStatus}`
+    };
+  }
+
+  // handle message and threads with app_mention
   if (!['message', 'app_mention'].includes(body.event.type) || isEmpty(body.event.client_msg_id)) {
     console.log(`Ignoring type: ${body.type}`);
     return {

@@ -91,6 +91,7 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
                 statements: [
                   new PolicyStatement({
                     actions: [
+                      'dynamodb:DeleteItem',
                       'dynamodb:PutItem',
                       'dynamodb:GetItem',
                       'dynamodb:Scan',

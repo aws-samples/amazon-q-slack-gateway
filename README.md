@@ -22,7 +22,8 @@ It's easy to deploy in your own AWS Account, and add to your own Slack Workspace
 - Provides Source Attribution - see references to sources used by [[AWS Enterprise Q]]
 - Aware of conversation context - it tracks the conversation and applies context
 - Aware of multiple users - when it's tagged in a thread, it knows who said what, and when - so it can contribute in context and accurately summarize the thread when asked.  
-- Process up to 5 attached files for document question answering, summaries, etc. 
+- Process up to 5 attached files for document question answering, summaries, etc.
+- Reset and start new conversation in DM channel by using `/new_conversation`
 
 This sample [[AWS Enterprise Q]] slack application is provided as open source — use it as a starting point for your own solution, and help us make it better by contributing back fixes and features via GitHub pull requests. Explore the code, choose Watch to be notified of new releases, and check back for the latest  updates.
 
