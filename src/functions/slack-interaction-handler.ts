@@ -20,6 +20,7 @@ const processSlackInteractionsEnv = (env: NodeJS.ProcessEnv) => ({
   ENTERPRISE_Q_APP_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_APP_ID),
   ENTERPRISE_Q_USER_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_USER_ID),
   ENTERPRISE_Q_REGION: getOrThrowIfEmpty(env.ENTERPRISE_Q_REGION),
+  CONTEXT_DAYS_TO_LIVE: getOrThrowIfEmpty(env.CONTEXT_DAYS_TO_LIVE),
   CACHE_TABLE_NAME: getOrThrowIfEmpty(env.CACHE_TABLE_NAME),
   MESSAGE_METADATA_TABLE_NAME: getOrThrowIfEmpty(env.MESSAGE_METADATA_TABLE_NAME)
 });
