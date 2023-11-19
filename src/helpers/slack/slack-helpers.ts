@@ -73,6 +73,7 @@ export const retrieveAttachment = async (
   // Convert the response data to a base64 string
   const base64String = Buffer.from(response.data, 'binary').toString('base64');
 
+  // base64String can be long.. log just enough to validate file contents when troubleshooting.
   logger.debug(`retrieveAttachment from ${url}: ${base64String.substring(0, 300)}`);
   return base64String;
 };
