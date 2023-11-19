@@ -22,6 +22,7 @@
         "channels:history",
         "app_mentions:read",
         "users:read",
+        "users:read.email",
         "groups:history",
         "files:read"
       ]

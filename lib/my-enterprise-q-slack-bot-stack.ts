@@ -71,7 +71,7 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
             ENTERPRISE_Q_ENDPOINT: env.EnterpriseQEndpoint ?? '',
             ENTERPRISE_Q_REGION: env.EnterpriseQRegion,
             ENTERPRISE_Q_APP_ID: env.EnterpriseQAppId,
-            ENTERPRISE_Q_USER_ID: env.EnterpriseQUserId,
+            ENTERPRISE_Q_USER_ID: env.EnterpriseQUserId ?? '',
             CONTEXT_DAYS_TO_LIVE: env.ContextDaysToLive,
             CACHE_TABLE_NAME: dynamoCache.tableName,
             MESSAGE_METADATA_TABLE_NAME: messageMetadata.tableName
