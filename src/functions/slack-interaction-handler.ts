@@ -18,8 +18,9 @@ const processSlackInteractionsEnv = (env: NodeJS.ProcessEnv) => ({
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
   ENTERPRISE_Q_ENDPOINT: env.ENTERPRISE_Q_ENDPOINT,
   ENTERPRISE_Q_APP_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_APP_ID),
-  ENTERPRISE_Q_USER_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_USER_ID),
+  ENTERPRISE_Q_USER_ID: env.ENTERPRISE_Q_USER_ID,
   ENTERPRISE_Q_REGION: getOrThrowIfEmpty(env.ENTERPRISE_Q_REGION),
+  CONTEXT_DAYS_TO_LIVE: getOrThrowIfEmpty(env.CONTEXT_DAYS_TO_LIVE),
   CACHE_TABLE_NAME: getOrThrowIfEmpty(env.CACHE_TABLE_NAME),
   MESSAGE_METADATA_TABLE_NAME: getOrThrowIfEmpty(env.MESSAGE_METADATA_TABLE_NAME)
 });
@@ -67,7 +68,7 @@ export const handler = async (
   }
 
   const payload = JSON.parse(payloadParam);
-  logger.debug(JSON.stringify(payload));
+  logger.debug(`Received event payload: ${JSON.stringify(payload)}`);
 
   if (payload.type !== 'block_actions') {
     return { statusCode: 200, body: 'Not a block action payload. Not implemented. Nothing to do' };
@@ -114,6 +115,13 @@ export const handler = async (
       id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ||
       id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN]
     ) {
+      if (isEmpty(slackInteractionsEnv.ENTERPRISE_Q_USER_ID)) {
+        // Use slack user email as Q UserId
+        const userEmail = (await dependencies.getUserInfo(slackInteractionsEnv, payload.user.id)).user?.profile?.email;
+        slackInteractionsEnv.ENTERPRISE_Q_USER_ID = userEmail;
+        logger.debug(`User's email (${userEmail}) used as Amazon Q userId, since EnterpriseQUserId is empty.`)
+      }
+
       await dependencies.submitFeedbackRequest(
         slackInteractionsEnv,
         {

@@ -21,8 +21,9 @@ const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
   ENTERPRISE_Q_ENDPOINT: env.ENTERPRISE_Q_ENDPOINT,
   ENTERPRISE_Q_APP_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_APP_ID),
-  ENTERPRISE_Q_USER_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_USER_ID),
+  ENTERPRISE_Q_USER_ID: env.ENTERPRISE_Q_USER_ID,
   ENTERPRISE_Q_REGION: getOrThrowIfEmpty(env.ENTERPRISE_Q_REGION),
+  CONTEXT_DAYS_TO_LIVE: getOrThrowIfEmpty(env.CONTEXT_DAYS_TO_LIVE),
   CACHE_TABLE_NAME: getOrThrowIfEmpty(env.CACHE_TABLE_NAME),
   MESSAGE_METADATA_TABLE_NAME: getOrThrowIfEmpty(env.MESSAGE_METADATA_TABLE_NAME)
 });
@@ -63,7 +64,7 @@ export const handler = async (
   },
   slackEventsEnv: SlackEventsEnv = processSlackEventsEnv(process.env)
 ): Promise<APIGatewayProxyResult> => {
-  logger.debug(`Received event ${JSON.stringify(event)}`);
+  logger.debug(`Received event: ${JSON.stringify(event)}`);
 
   logger.debug(`dependencies ${JSON.stringify(dependencies)}`);
   if (isEmpty(event.body)) {
@@ -192,6 +193,17 @@ export const handler = async (
   const input = [];
   const userInformationCache: Record<string, UsersInfoResponse> = {};
   const stripMentions = (text?: string) => text?.replace(/<@[A-Z0-9]+>/g, '').trim();
+
+  // retrieve and cache user info
+  if (isEmpty(userInformationCache[body.event.user])) {
+    userInformationCache[body.event.user] = await dependencies.getUserInfo(slackEventsEnv, body.event.user);
+  }
+  if (isEmpty(slackEventsEnv.ENTERPRISE_Q_USER_ID)) {
+    // Use slack user email as Q UserId
+    const userEmail = userInformationCache[body.event.user].user?.profile?.email;
+    slackEventsEnv.ENTERPRISE_Q_USER_ID = userEmail;
+    logger.debug(`User's email (${userEmail}) used as Amazon Q userId, since EnterpriseQUserId is empty.`)
+  }
 
   if (!isEmpty(body.event.thread_ts)) {
     const threadHistory = await dependencies.retrieveThreadHistory(

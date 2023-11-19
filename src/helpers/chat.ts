@@ -84,28 +84,35 @@ export const deleteChannelMetadata = async (
     }
   });
 
+const expireAt = (env: SlackEventsEnv) => {
+  const contextTTL = Number(env.CONTEXT_DAYS_TO_LIVE) * 24 * 60 * 60 * 1000; // milliseconds
+  return Math.floor((Date.now() + contextTTL) / 1000); // Unix time (seconds);
+} 
+
 export const saveChannelMetadata = async (
   channel: string,
   conversationId: string,
   systemMessageId: string,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
-) =>
+) => {
   await dependencies.putItem({
     TableName: env.CACHE_TABLE_NAME,
     Item: {
       channel,
       conversationId,
       systemMessageId,
-      latestTs: Date.now()
+      latestTs: Date.now(),
+      expireAt: expireAt(env)
     }
   });
+}
 
 export const saveMessageMetadata = async (
   enterpriseQResponse: EnterpriseQResponse,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
-) =>
+) => {
   await dependencies.putItem({
     TableName: env.MESSAGE_METADATA_TABLE_NAME,
     Item: {
@@ -114,9 +121,11 @@ export const saveMessageMetadata = async (
       sourceAttributions: enterpriseQResponse.sourceAttributions,
       systemMessageId: enterpriseQResponse.systemMessageId,
       userMessageId: enterpriseQResponse.userMessageId,
-      ts: Date.now()
+      ts: Date.now(),
+      expireAt: expireAt(env)
     }
   });
+}
 
 export const getMessageMetadata = async (
   systemMessageId: string,
