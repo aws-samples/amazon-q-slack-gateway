@@ -24,6 +24,6 @@ if (environment.EnterpriseQRegion === undefined) { throw new Error("EnterpriseQR
 if (environment.EnterpriseQUserId === undefined) { throw new Error("EnterpriseQUserId is required"); }
 if (environment.ContextDaysToLive === undefined) { throw new Error("ContextDaysToLive is required"); }
 
-new MyEnterpriseQSlackBotStack(app, 'MyLexSlackBotStack', {
+new MyEnterpriseQSlackBotStack(app, 'AmazonQSlackGatewayStack', {
   stackName: environment.StackName,
 }, environment);

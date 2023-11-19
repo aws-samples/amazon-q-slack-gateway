@@ -5,7 +5,7 @@ import {
   callClient,
   submitFeedbackRequest
 } from '@helpers/enterprise-q/enterprise-q-client';
-import { getItem, putItem } from '@helpers/dynamodb-client';
+import { deleteItem, getItem, putItem } from '@helpers/dynamodb-client';
 import {
   getUserInfo,
   retrieveThreadHistory,
@@ -22,6 +22,7 @@ export interface ChatResponse {
 export const chatDependencies = {
   callClient,
   submitFeedbackRequest,
+  deleteItem,
   getItem,
   putItem,
   sendSlackMessage,
@@ -70,6 +71,18 @@ export const getChannelMetadata = async (
       }
     })
   ).Item;
+
+export const deleteChannelMetadata = async (
+  channel: string,
+  dependencies: ChatDependencies,
+  env: SlackEventsEnv
+) =>
+  await dependencies.deleteItem({
+    TableName: env.CACHE_TABLE_NAME,
+    Key: {
+      channel
+    }
+  });
 
 const expireAt = (env: SlackEventsEnv) => {
   const contextTTL = Number(env.CONTEXT_DAYS_TO_LIVE) * 24 * 60 * 60 * 1000; // milliseconds

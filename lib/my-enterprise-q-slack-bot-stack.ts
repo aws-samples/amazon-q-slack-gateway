@@ -55,6 +55,11 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
         handler: 'slack-interaction-handler',
         id: 'SlackInteractionHandler',
         description: 'Lambda function handler for Slack interactions'
+      },
+      {
+        handler: 'slack-command-handler',
+        id: 'SlackCommandHandler',
+        description: 'Lambda function handler for Slack commands'
       }
     ].map((p) => {
       const suffix = `${props.stackName}-${p.id}`;
@@ -94,11 +99,9 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
                 statements: [
                   new PolicyStatement({
                     actions: [
+                      'dynamodb:DeleteItem',
                       'dynamodb:PutItem',
-                      'dynamodb:GetItem',
-                      'dynamodb:Scan',
-                      'dynamodb:Query',
-                      'dynamodb:UpdateItem'
+                      'dynamodb:GetItem'
                     ],
                     resources: [dynamoCache.tableArn, messageMetadata.tableArn]
                   })

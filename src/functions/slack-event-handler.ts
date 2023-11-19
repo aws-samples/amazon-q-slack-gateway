@@ -90,7 +90,7 @@ export const handler = async (
   }
 
   const body = JSON.parse(event.body);
-  logger.debug(`Received event body: ${JSON.stringify(body)}`);
+  logger.debug(`Received message body ${JSON.stringify(body)}`);
 
   // Read why it is needed: https://api.slack.com/events/url_verification
   if (!isEmpty(body.challenge)) {
@@ -112,6 +112,7 @@ export const handler = async (
     };
   }
 
+  // handle message and threads with app_mention
   if (!['message', 'app_mention'].includes(body.event.type) || isEmpty(body.event.client_msg_id)) {
     console.log(`Ignoring type: ${body.type}`);
     return {

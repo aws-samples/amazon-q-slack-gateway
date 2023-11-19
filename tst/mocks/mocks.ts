@@ -31,6 +31,7 @@ export const MOCK_AWS_RESPONSE = {
 export const MOCK_DEPENDENCIES = {
   callClient: () => Promise.resolve(enterpriseQValidResponse1TextTable),
   submitFeedbackRequest: () => Promise.resolve(),
+  deleteItem: async () => MOCK_AWS_RESPONSE,
   putItem: async () => MOCK_AWS_RESPONSE,
   validateSlackRequest: () => Promise.resolve(true),
   retrieveThreadHistory: () =>
