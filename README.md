@@ -9,6 +9,10 @@ In this repo we share a project which lets you bring the power of [[AWS Enterpri
 
 It's amazingly powerful. Here's a demo - seeing is believing!
  
+
+https://github.com/aws-samples/amazon-q-slack-gateway/assets/10953374/6902a9ea-7a24-4e00-bd41-e1029d0f58e4
+
+
 <TODO - Update demo - use animated gif>  
 ![Slack Demo](./images/thread-demo.png)
 
