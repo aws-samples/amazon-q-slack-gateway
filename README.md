@@ -13,9 +13,6 @@ It's amazingly powerful. Here's a demo - seeing is believing!
 https://github.com/aws-samples/amazon-q-slack-gateway/assets/10953374/6902a9ea-7a24-4e00-bd41-e1029d0f58e4
 
 
-<TODO - Update demo - use animated gif>  
-![Slack Demo](./images/thread-demo.png)
-
 It's easy to deploy in your own AWS Account, and add to your own Slack Workspace. We show you how below.
 
 ### Features
@@ -30,6 +27,8 @@ It's easy to deploy in your own AWS Account, and add to your own Slack Workspace
 - Reset and start new conversation in DM channel by using `/new_conversation`
 
 This sample [[AWS Enterprise Q]] slack application is provided as open source — use it as a starting point for your own solution, and help us make it better by contributing back fixes and features via GitHub pull requests. Explore the code, choose Watch to be notified of new releases, and check back for the latest  updates.
+
+![Slack Demo](./images/thread-demo.png)
 
 Follow the instructions below to deploy the project to your own AWS account and Slack workspace, and start experimenting!
 
