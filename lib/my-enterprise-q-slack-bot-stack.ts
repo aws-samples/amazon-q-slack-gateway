@@ -17,9 +17,16 @@ import {
 } from 'aws-cdk-lib/aws-iam';
 import { StackEnvironment } from '../bin/my-enterprise-q-slack-bot';
 
+import * as fs from 'fs';
+const version = fs.readFileSync('VERSION', 'utf-8').trim();
+const STACK_DESCRIPTION = `Amazon Q Slack Gateway - v${version}`;
+
 export class MyEnterpriseQSlackBotStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: cdk.StackProps, env: StackEnvironment) {
-    super(scope, id, props);
+    super(scope, id, {
+      ...props,
+      description: STACK_DESCRIPTION 
+    });
 
     const vpc = new Vpc(this, `${props.stackName}-VPC`);
 
