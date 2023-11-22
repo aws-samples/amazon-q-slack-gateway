@@ -16,19 +16,21 @@ extract_version() {
     echo "$1" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n 1
 }
 
-declare -A commands
-commands["node"]="18.0.0"
-commands["npm"]="10.2.0"
-commands["tsc"]="3.8.0"
-commands["esbuild"]="0.19.0"
-commands["jq"]="1.5"
-commands["aws"]="2.13.0"
-commands["cdk"]="2.110.0"
+# Commands and minimum versions
+commands="node npm tsc esbuild jq aws cdk"
+node_version="18.0.0"
+npm_version="10.2.0"
+tsc_version="3.8.0"
+esbuild_version="0.19.0"
+jq_version="1.5"
+aws_version="2.13.0"
+cdk_version="2.110.0"
 
 status=0
 
-for cmd in "${!commands[@]}"; do
-    min_version=${commands[$cmd]}
+for cmd in $commands; do
+    min_version_var="${cmd}_version"
+    min_version=${!min_version_var}
     if command_exists "$cmd"; then
         installed_version=$(extract_version "$($cmd --version)")
         if version_gt $min_version $installed_version; then
@@ -44,3 +46,4 @@ for cmd in "${!commands[@]}"; do
 done
 
 exit $status
+
