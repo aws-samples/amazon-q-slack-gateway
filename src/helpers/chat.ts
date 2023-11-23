@@ -1,10 +1,10 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { Block } from '@slack/web-api';
 import {
-  EnterpriseQResponse,
+  AmazonQResponse,
   callClient,
   submitFeedbackRequest
-} from '@helpers/enterprise-q/enterprise-q-client';
+} from '@helpers/amazon-q/amazon-q-client';
 import { deleteItem, getItem, putItem } from '@helpers/dynamodb-client';
 import {
   getUserInfo,
@@ -13,7 +13,7 @@ import {
   sendSlackMessage,
   updateSlackMessage
 } from '@helpers/slack/slack-helpers';
-import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/enterprise-q/enterprise-q-helpers';
+import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
 
 export interface ChatResponse {
   systemMessage: string;
@@ -44,8 +44,8 @@ export type callClient = (
 ) => ChatResponse;
 
 export interface ChatContextFile {
-  name: string,
-  data: string,
+  name: string;
+  data: string;
 }
 
 export type getResponseAsBlocks = (response: ChatResponse) => Block[] | undefined;
@@ -87,7 +87,7 @@ export const deleteChannelMetadata = async (
 const expireAt = (env: SlackEventsEnv) => {
   const contextTTL = Number(env.CONTEXT_DAYS_TO_LIVE) * 24 * 60 * 60 * 1000; // milliseconds
   return Math.floor((Date.now() + contextTTL) / 1000); // Unix time (seconds);
-} 
+};
 
 export const saveChannelMetadata = async (
   channel: string,
@@ -106,26 +106,26 @@ export const saveChannelMetadata = async (
       expireAt: expireAt(env)
     }
   });
-}
+};
 
 export const saveMessageMetadata = async (
-  enterpriseQResponse: EnterpriseQResponse,
+  amazonQResponse: AmazonQResponse,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) => {
   await dependencies.putItem({
     TableName: env.MESSAGE_METADATA_TABLE_NAME,
     Item: {
-      messageId: enterpriseQResponse.systemMessageId,
-      conversationId: enterpriseQResponse.conversationId,
-      sourceAttributions: enterpriseQResponse.sourceAttributions,
-      systemMessageId: enterpriseQResponse.systemMessageId,
-      userMessageId: enterpriseQResponse.userMessageId,
+      messageId: amazonQResponse.systemMessageId,
+      conversationId: amazonQResponse.conversationId,
+      sourceAttributions: amazonQResponse.sourceAttributions,
+      systemMessageId: amazonQResponse.systemMessageId,
+      userMessageId: amazonQResponse.userMessageId,
       ts: Date.now(),
       expireAt: expireAt(env)
     }
   });
-}
+};
 
 export const getMessageMetadata = async (
   systemMessageId: string,

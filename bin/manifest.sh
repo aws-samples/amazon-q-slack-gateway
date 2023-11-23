@@ -30,9 +30,9 @@ SLACK_COMMAND_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_ent
 
 # Use sed to replace the tokens with the extracted values in the template file and write to the new file
 sed "s|\"!!! \[SlackBotName\] !!!\"|\"$STACKNAME\"|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
-sed -i "s|\"!!! \[SlackEventHandlerApiOutput\] !!!\"|\"$SLACK_EVENT_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
-sed -i "s|\"!!! \[SlackInteractionHandlerApiOutput\] !!!\"|\"$SLACK_INTERACTION_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
-sed -i "s|\"!!! \[SlackCommandApiOutput\] !!!\"|\"$SLACK_COMMAND_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+sed -i "" "s|\"!!! \[SlackEventHandlerApiOutput\] !!!\"|\"$SLACK_EVENT_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+sed -i "" "s|\"!!! \[SlackInteractionHandlerApiOutput\] !!!\"|\"$SLACK_INTERACTION_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+sed -i "" "s|\"!!! \[SlackCommandApiOutput\] !!!\"|\"$SLACK_COMMAND_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
 
 # Display a message to show completion
 echo "Slack app manifest created: $OUTPUT_FILE."

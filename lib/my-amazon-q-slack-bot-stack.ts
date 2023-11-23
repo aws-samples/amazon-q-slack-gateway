@@ -15,9 +15,9 @@ import {
   Role,
   ServicePrincipal
 } from 'aws-cdk-lib/aws-iam';
-import { StackEnvironment } from '../bin/my-enterprise-q-slack-bot';
+import { StackEnvironment } from '../bin/my-amazon-q-slack-bot';
 
-export class MyEnterpriseQSlackBotStack extends cdk.Stack {
+export class MyAmazonQSlackBotStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: cdk.StackProps, env: StackEnvironment) {
     super(scope, id, props);
 
@@ -73,10 +73,10 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
           timeout: Duration.seconds(30),
           environment: {
             SLACK_SECRET_NAME: slackSecret.secretName,
-            ENTERPRISE_Q_ENDPOINT: env.EnterpriseQEndpoint ?? '',
-            ENTERPRISE_Q_REGION: env.EnterpriseQRegion,
-            ENTERPRISE_Q_APP_ID: env.EnterpriseQAppId,
-            ENTERPRISE_Q_USER_ID: env.EnterpriseQUserId ?? '',
+            AMAZON_Q_ENDPOINT: env.AmazonQEndpoint ?? '',
+            AMAZON_Q_REGION: env.AmazonQRegion,
+            AMAZON_Q_APP_ID: env.AmazonQAppId,
+            AMAZON_Q_USER_ID: env.AmazonQUserId ?? '',
             CONTEXT_DAYS_TO_LIVE: env.ContextDaysToLive,
             CACHE_TABLE_NAME: dynamoCache.tableName,
             MESSAGE_METADATA_TABLE_NAME: messageMetadata.tableName
@@ -98,11 +98,7 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
               DynamoDBPolicy: new PolicyDocument({
                 statements: [
                   new PolicyStatement({
-                    actions: [
-                      'dynamodb:DeleteItem',
-                      'dynamodb:PutItem',
-                      'dynamodb:GetItem'
-                    ],
+                    actions: ['dynamodb:DeleteItem', 'dynamodb:PutItem', 'dynamodb:GetItem'],
                     resources: [dynamoCache.tableArn, messageMetadata.tableArn]
                   })
                 ]
@@ -110,9 +106,9 @@ export class MyEnterpriseQSlackBotStack extends cdk.Stack {
               ChatPolicy: new PolicyDocument({
                 statements: [
                   new PolicyStatement({
-                    actions: ['enterpriseq:ChatSync', 'enterpriseq:PutFeedback'],
+                    actions: ['qbusiness:ChatSync', 'qbusiness:PutFeedback'],
                     // parametrized
-                    resources: [`arn:aws:enterpriseq:*:*:application/${env.EnterpriseQAppId}`]
+                    resources: [`arn:aws:qbusiness:*:*:application/${env.AmazonQAppId}`]
                   })
                 ]
               })
