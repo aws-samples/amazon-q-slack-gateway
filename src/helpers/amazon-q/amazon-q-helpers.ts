@@ -1,15 +1,15 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { createButton, getMarkdownBlocks, SLACK_ACTION } from '@helpers/slack/slack-helpers';
-import { EnterpriseQResponse } from '@helpers/enterprise-q/enterprise-q-client';
+import { AmazonQResponse } from '@helpers/amazon-q/amazon-q-client';
 import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
 import { ChatDependencies, ChatContextFile } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
 
-const logger = makeLogger('enterprise-q-helpers');
+const logger = makeLogger('amazon-q-helpers');
 
 // Member must have length less than or equal to 7000
-const ENTERPRISE_Q_MSG_LIMIT = 7000;
+const AMAZON_Q_MSG_LIMIT = 7000;
 const WARN_TRUNCATED = `| Please note that you do not have all the conversation history due to limitation`;
 
 export const chat = async (
@@ -21,19 +21,19 @@ export const chat = async (
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<EnterpriseQResponse | Error> => {
+): Promise<AmazonQResponse | Error> => {
   try {
     // I do not like this, but we have a hard limitation
     // I am wondering if the service will provide a way to inject a prompt as an individual parameter
     const inputMessage =
-      incomingMessage.length > ENTERPRISE_Q_MSG_LIMIT
+      incomingMessage.length > AMAZON_Q_MSG_LIMIT
         ? incomingMessage.slice(
-            incomingMessage.length + WARN_TRUNCATED.length - ENTERPRISE_Q_MSG_LIMIT
+            incomingMessage.length + WARN_TRUNCATED.length - AMAZON_Q_MSG_LIMIT
           ) + WARN_TRUNCATED
         : incomingMessage;
 
     const response = await dependencies.callClient(inputMessage, chatContextFiles, env, context);
-    logger.debug(`EnterpriseQ chatSync response: ${JSON.stringify(response)}`);
+    logger.debug(`AmazonQ chatSync response: ${JSON.stringify(response)}`);
     return response;
   } catch (error) {
     logger.error(`Caught Exception: ${JSON.stringify(error)}`);
@@ -41,7 +41,7 @@ export const chat = async (
   }
 };
 
-export const getResponseAsBlocks = (response: EnterpriseQResponse) => {
+export const getResponseAsBlocks = (response: AmazonQResponse) => {
   if (isEmpty(response.systemMessage)) {
     return [];
   }
@@ -60,7 +60,7 @@ export const getResponseAsBlocks = (response: EnterpriseQResponse) => {
   ];
 };
 
-export const getFeedbackBlocks = (response: EnterpriseQResponse): Block[] => [
+export const getFeedbackBlocks = (response: AmazonQResponse): Block[] => [
   {
     type: 'actions',
     block_id: `feedback-${response.conversationId}-${response.systemMessageId}`,

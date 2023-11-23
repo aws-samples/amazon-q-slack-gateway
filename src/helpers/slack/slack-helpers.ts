@@ -5,7 +5,7 @@ import { Block, ChatPostMessageResponse, ModalView, WebClient } from '@slack/web
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
 import { makeLogger } from '@src/logging';
-import { SourceAttribution } from '@helpers/enterprise-q/enterprise-q-client';
+import { SourceAttribution } from '@helpers/amazon-q/amazon-q-client';
 import { isEmpty } from '@src/utils';
 
 const logger = makeLogger('slack-helpers');

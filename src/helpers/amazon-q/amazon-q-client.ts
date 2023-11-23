@@ -9,9 +9,9 @@ import { v4 as uuid } from 'uuid';
 /* eslint @typescript-eslint/no-var-requires: "off" */
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 const AWS = require('aws-sdk');
-const logger = makeLogger('enterprise-q-client');
+const logger = makeLogger('amazon-q-client');
 
-export interface EnterpriseQResponse extends ChatResponse {
+export interface AmazonQResponse extends ChatResponse {
   conversationId: string;
   systemMessageId: string;
   userMessageId: string;
@@ -32,12 +32,12 @@ export interface TextSegment {
   endOffset?: number;
 }
 
-export const initEnterpriseQSDK = () => {
+export const initAmazonQSDK = () => {
   AWS.apiLoader.services.expertq = {};
   AWS.ExpertQ = AWS.Service.defineService('expertq', ['2023-11-27']);
   Object.defineProperty(AWS.apiLoader.services.expertq, '2023-11-27', {
     get: function get() {
-      const model = require('./enterprise-q.json');
+      const model = require('./amazon-q.json');
       model.paginators = {};
       return model;
     },
@@ -46,20 +46,20 @@ export const initEnterpriseQSDK = () => {
   });
 };
 
-let enterpriseQClient: unknown = null;
+let amazonQClient: unknown = null;
 export const getClient = (env: SlackEventsEnv) => {
-  if (enterpriseQClient === null) {
-    initEnterpriseQSDK();
+  if (amazonQClient === null) {
+    initAmazonQSDK();
     logger.debug(
-      `Initiating EnterpriseQ client with region ${env.ENTERPRISE_Q_REGION} and endpoint ${env.ENTERPRISE_Q_ENDPOINT}`
+      `Initiating AmazonQ client with region ${env.AMAZON_Q_REGION} and endpoint ${env.AMAZON_Q_ENDPOINT}`
     );
-    enterpriseQClient = new AWS.ExpertQ({
-      region: env.ENTERPRISE_Q_REGION,
-      endpoint: env.ENTERPRISE_Q_ENDPOINT
+    amazonQClient = new AWS.ExpertQ({
+      region: env.AMAZON_Q_REGION,
+      endpoint: env.AMAZON_Q_ENDPOINT
     });
   }
 
-  return enterpriseQClient;
+  return amazonQClient;
 };
 
 export const callClient = async (
@@ -70,10 +70,10 @@ export const callClient = async (
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<EnterpriseQResponse> => {
+): Promise<AmazonQResponse> => {
   const input = {
-    applicationId: env.ENTERPRISE_Q_APP_ID,
-    userId: env.ENTERPRISE_Q_USER_ID,
+    applicationId: env.AMAZON_Q_APP_ID,
+    userId: env.AMAZON_Q_USER_ID,
     clientToken: uuid(),
     userMessage: message,
     ...(chatContextFiles.length > 0 && { chatContextFiles }),
@@ -95,8 +95,8 @@ export const submitFeedbackRequest = async (
   submittedAt: string
 ): Promise<void> => {
   const input = {
-    applicationId: env.ENTERPRISE_Q_APP_ID,
-    userId: env.ENTERPRISE_Q_USER_ID,
+    applicationId: env.AMAZON_Q_APP_ID,
+    userId: env.AMAZON_Q_USER_ID,
     ...context,
     messageUsefulness: {
       usefulness: usefulness,

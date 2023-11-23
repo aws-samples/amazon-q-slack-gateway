@@ -1,5 +1,5 @@
-import enterpriseQValidResponse1 from '@tst/mocks/enterprise-q/valid-response-1.json';
-import enterpriseQValidResponse2 from '@tst/mocks/enterprise-q/valid-response-2.json';
+import amazonQValidResponse1 from '@tst/mocks/amazon-q/valid-response-1.json';
+import amazonQValidResponse2 from '@tst/mocks/amazon-q/valid-response-2.json';
 import { MOCK_DEPENDENCIES, MOCK_ENV } from '@tst/mocks/mocks';
 
 import {
@@ -9,16 +9,16 @@ import {
   getTablePrefix,
   hasTable,
   parseTable
-} from '@helpers/enterprise-q/enterprise-q-helpers';
+} from '@helpers/amazon-q/amazon-q-helpers';
 
-describe('EnterpriseQ helpers test', () => {
+describe('AmazonQ helpers test', () => {
   test('Should get a response as block with context', async () => {
     const response = await chat('message', [], MOCK_DEPENDENCIES, MOCK_ENV);
-    expect(response).toEqual(enterpriseQValidResponse1);
+    expect(response).toEqual(amazonQValidResponse1);
   });
 
   test('Test response markdown conversion', async () => {
-    const response = getResponseAsBlocks(enterpriseQValidResponse1);
+    const response = getResponseAsBlocks(amazonQValidResponse1);
     expect(response).toEqual([
       {
         text: {
@@ -45,7 +45,7 @@ describe('EnterpriseQ helpers test', () => {
       }
     ]);
 
-    const response2 = getResponseAsBlocks(enterpriseQValidResponse2);
+    const response2 = getResponseAsBlocks(amazonQValidResponse2);
     expect(response2).toEqual([
       {
         text: {
@@ -58,10 +58,10 @@ describe('EnterpriseQ helpers test', () => {
   });
 
   test('Test table markdown', async () => {
-    const prefix = getTablePrefix(enterpriseQValidResponse1.systemMessage);
-    expect(hasTable(enterpriseQValidResponse1.systemMessage)).toBeTruthy();
+    const prefix = getTablePrefix(amazonQValidResponse1.systemMessage);
+    expect(hasTable(amazonQValidResponse1.systemMessage)).toBeTruthy();
 
-    const table = getTable(enterpriseQValidResponse1.systemMessage);
+    const table = getTable(amazonQValidResponse1.systemMessage);
     const parsedTable = parseTable(table);
 
     expect(prefix).toEqual('# The Pillars of the Well Architected Framework');
