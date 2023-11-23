@@ -31,8 +31,13 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
 
     const vpc = new Vpc(this, `${props.stackName}-VPC`);
 
+    const initialSecretContent = JSON.stringify({
+      SlackSigningSecret: '<Replace with Signing Secret>',
+      SlackBotUserOAuthToken: '<Replace with Bot User OAuth Token>'
+    });
     const slackSecret = new Secret(this, `${props.stackName}-Secret`, {
-      secretName: `${props.stackName}-Secret`
+      secretName: `${props.stackName}-Secret`,
+      secretStringValue: cdk.SecretValue.unsafePlainText(initialSecretContent)
     });
 
     const dynamoCache = new Table(this, `${props.stackName}-DynamoCache`, {
@@ -41,7 +46,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         name: 'channel',
         type: AttributeType.STRING
       },
-      timeToLiveAttribute: 'expireAt'
+      timeToLiveAttribute: 'expireAt',
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     const messageMetadata = new Table(this, `${props.stackName}-MessageMetadata`, {
@@ -50,7 +56,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         name: 'messageId',
         type: AttributeType.STRING
       },
-      timeToLiveAttribute: 'expireAt'
+      timeToLiveAttribute: 'expireAt',
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     [
