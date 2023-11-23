@@ -9,19 +9,20 @@ import {
 } from '@helpers/chat';
 import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
-import { chat } from '@helpers/enterprise-q/enterprise-q-helpers';
+import { chat } from '@helpers/amazon-q/amazon-q-helpers';
 import { UsersInfoResponse } from '@slack/web-api';
 import { ChatContextFile } from '@src/helpers/chat';
+import { FileElement } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 
 const logger = makeLogger('slack-event-handler');
 
 const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
   REGION: getOrThrowIfEmpty(env.AWS_REGION ?? env.AWS_DEFAULT_REGION),
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
-  ENTERPRISE_Q_ENDPOINT: env.ENTERPRISE_Q_ENDPOINT,
-  ENTERPRISE_Q_APP_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_APP_ID),
-  ENTERPRISE_Q_USER_ID: env.ENTERPRISE_Q_USER_ID,
-  ENTERPRISE_Q_REGION: getOrThrowIfEmpty(env.ENTERPRISE_Q_REGION),
+  AMAZON_Q_ENDPOINT: env.AMAZON_Q_ENDPOINT,
+  AMAZON_Q_APP_ID: getOrThrowIfEmpty(env.AMAZON_Q_APP_ID),
+  AMAZON_Q_USER_ID: env.AMAZON_Q_USER_ID,
+  AMAZON_Q_REGION: getOrThrowIfEmpty(env.AMAZON_Q_REGION),
   CONTEXT_DAYS_TO_LIVE: getOrThrowIfEmpty(env.CONTEXT_DAYS_TO_LIVE),
   CACHE_TABLE_NAME: getOrThrowIfEmpty(env.CACHE_TABLE_NAME),
   MESSAGE_METADATA_TABLE_NAME: getOrThrowIfEmpty(env.MESSAGE_METADATA_TABLE_NAME)
@@ -29,26 +30,48 @@ const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
 
 export type SlackEventsEnv = ReturnType<typeof processSlackEventsEnv>;
 
-const MAX_FILE_ATTACHMENTS = 5
-const SUPPORTED_FILE_TYPES = ['text', 'html', 'xml', 'markdown', 'csv', 'json', 'xls', 'xlsx', 'ppt', 'pptx', 'doc', 'docx', 'rtf', 'pdf'];
-const attachFiles = async(slackEventsEnv: SlackEventsEnv, files: any[]): Promise<ChatContextFile[]> => {
-  const newChatContextFiles: ChatContextFile[] = []
+const MAX_FILE_ATTACHMENTS = 5;
+const SUPPORTED_FILE_TYPES = [
+  'text',
+  'html',
+  'xml',
+  'markdown',
+  'csv',
+  'json',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'doc',
+  'docx',
+  'rtf',
+  'pdf'
+];
+const attachFiles = async (
+  slackEventsEnv: SlackEventsEnv,
+  files: FileElement[]
+): Promise<ChatContextFile[]> => {
+  const newChatContextFiles: ChatContextFile[] = [];
   for (const f of files) {
     // Check if the file type is supported
-    if (SUPPORTED_FILE_TYPES.includes(f.filetype)) {
+    if (
+      !isEmpty(f.filetype) &&
+      SUPPORTED_FILE_TYPES.includes(f.filetype) &&
+      !isEmpty(f.url_private_download) &&
+      !isEmpty(f.name)
+    ) {
       newChatContextFiles.push({
         name: f.name,
-        data: await chatDependencies.retrieveAttachment(
-          slackEventsEnv,
-          f.url_private_download
-        )
+        data: await chatDependencies.retrieveAttachment(slackEventsEnv, f.url_private_download)
       });
     } else {
-      logger.debug(`Ignoring file attachment with unsupported filetype '${f.filetype}' - not one of '${SUPPORTED_FILE_TYPES}'`);
+      logger.debug(
+        `Ignoring file attachment with unsupported filetype '${f.filetype}' - not one of '${SUPPORTED_FILE_TYPES}'`
+      );
     }
   }
   return newChatContextFiles;
-}
+};
 
 export const handler = async (
   event: {
@@ -147,20 +170,25 @@ export const handler = async (
     parentMessageId: channelMetadata?.systemMessageId
   };
 
-  let chatContextFiles: ChatContextFile[] = [];  
+  let chatContextFiles: ChatContextFile[] = [];
   const input = [];
   const userInformationCache: Record<string, UsersInfoResponse> = {};
   const stripMentions = (text?: string) => text?.replace(/<@[A-Z0-9]+>/g, '').trim();
 
   // retrieve and cache user info
   if (isEmpty(userInformationCache[body.event.user])) {
-    userInformationCache[body.event.user] = await dependencies.getUserInfo(slackEventsEnv, body.event.user);
+    userInformationCache[body.event.user] = await dependencies.getUserInfo(
+      slackEventsEnv,
+      body.event.user
+    );
   }
-  if (isEmpty(slackEventsEnv.ENTERPRISE_Q_USER_ID)) {
+  if (isEmpty(slackEventsEnv.AMAZON_Q_USER_ID)) {
     // Use slack user email as Q UserId
     const userEmail = userInformationCache[body.event.user].user?.profile?.email;
-    slackEventsEnv.ENTERPRISE_Q_USER_ID = userEmail;
-    logger.debug(`User's email (${userEmail}) used as Amazon Q userId, since EnterpriseQUserId is empty.`)
+    slackEventsEnv.AMAZON_Q_USER_ID = userEmail;
+    logger.debug(
+      `User's email (${userEmail}) used as Amazon Q userId, since AmazonQUserId is empty.`
+    );
   }
 
   if (!isEmpty(body.event.thread_ts)) {
@@ -172,10 +200,10 @@ export const handler = async (
 
     if (threadHistory.ok && !isEmpty(threadHistory.messages)) {
       const promptConversationHistory = [];
-      // The last message in the threadHistory result is also the current message, so 
-      // to avoid duplicating chatHistory with the current message we skip the 
+      // The last message in the threadHistory result is also the current message, so
+      // to avoid duplicating chatHistory with the current message we skip the
       // last element in threadHistory message array.
-      for (const m of threadHistory.messages.slice(0,-1)) {
+      for (const m of threadHistory.messages.slice(0, -1)) {
         if (isEmpty(m.user)) {
           continue;
         }
@@ -191,7 +219,7 @@ export const handler = async (
         });
 
         if (!isEmpty(m.files)) {
-          chatContextFiles.push(...await attachFiles(slackEventsEnv, m.files));
+          chatContextFiles.push(...(await attachFiles(slackEventsEnv, m.files)));
         }
       }
 
@@ -214,11 +242,13 @@ export const handler = async (
 
   // attach files (if any) from current message
   if (!isEmpty(body.event.files)) {
-    chatContextFiles.push(...await attachFiles(slackEventsEnv, body.event.files));
+    chatContextFiles.push(...(await attachFiles(slackEventsEnv, body.event.files)));
   }
   // Limit file attachments to the last MAX_FILE_ATTACHMENTS
   if (chatContextFiles.length > MAX_FILE_ATTACHMENTS) {
-    logger.debug(`Too many attached files (${chatContextFiles.length}). Attaching the last ${MAX_FILE_ATTACHMENTS} files.`)
+    logger.debug(
+      `Too many attached files (${chatContextFiles.length}). Attaching the last ${MAX_FILE_ATTACHMENTS} files.`
+    );
     chatContextFiles = chatContextFiles.slice(-MAX_FILE_ATTACHMENTS);
   }
 

@@ -50,11 +50,11 @@ prompt_for_value() {
 }
 
 # Read or update values
-stack_name=$(prompt_for_value "StackName" "Name for slack bot" "EnterpriseQBot" "^[A-Za-z][A-Za-z0-9-]{0,127}$")
-user_id=$(prompt_for_value "EnterpriseQUserId" "Amazon Q User ID (leave empty to use slack users' email as user Id)" "" "^[^[:space:]]{0,2048}$")
-app_id=$(prompt_for_value "EnterpriseQAppId" "Enterprise Q Application ID (copy from AWS console)" "none" "^[a-zA-Z0-9][a-zA-Z0-9-]{35}$")
-region=$(prompt_for_value "EnterpriseQRegion" "Enterprise Q Region" $(aws configure get region) "^[a-z]{2}-[a-z]+-[0-9]+$")
-endpoint=$(prompt_for_value "EnterpriseQEndpoint" "Enterprise Q Endpoint (leave empty for default endpoint)" "" "^(https:\/\/\S+)?$")
+stack_name=$(prompt_for_value "StackName" "Name for slack bot" "AmazonQBot" "^[A-Za-z][A-Za-z0-9-]{0,127}$")
+user_id=$(prompt_for_value "AmazonQUserId" "Amazon Q User ID (leave empty to use slack users' email as user Id)" "" "^[^[:space:]]{0,2048}$")
+app_id=$(prompt_for_value "AmazonQAppId" "Amazon Q Application ID (copy from AWS console)" "none" "^[a-zA-Z0-9][a-zA-Z0-9-]{35}$")
+region=$(prompt_for_value "AmazonQRegion" "Amazon Q Region" $(aws configure get region) "^[a-z]{2}-[a-z]+-[0-9]+$")
+endpoint=$(prompt_for_value "AmazonQEndpoint" "Amazon Q Endpoint (leave empty for default endpoint)" "" "^(https:\/\/\S+)?$")
 ttl_days=$(prompt_for_value "ContextDaysToLive" "Number of days to keep conversation context" "90" "^[1-9][0-9]{0,3}$")
 
 # Create or update the JSON file
@@ -68,10 +68,10 @@ jq -n \
   --arg ttl_days "$ttl_days" \
   '{
     StackName: $stack_name,
-    EnterpriseQAppId: $app_id,
-    EnterpriseQUserId: $user_id,
-    EnterpriseQRegion: $region,
-    EnterpriseQEndpoint: $endpoint,
+    AmazonQAppId: $app_id,
+    AmazonQUserId: $user_id,
+    AmazonQRegion: $region,
+    AmazonQEndpoint: $endpoint,
     ContextDaysToLive: $ttl_days
   }' > "$json_file"
 

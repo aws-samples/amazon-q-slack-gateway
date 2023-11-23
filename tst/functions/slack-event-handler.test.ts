@@ -1,5 +1,5 @@
 import { handler } from '@functions/slack-event-handler';
-import enterpriseQValidResponse2TextSimple from '@tst/mocks/enterprise-q/valid-response-2.json';
+import amazonQValidResponse2TextSimple from '@tst/mocks/amazon-q/valid-response-2.json';
 import { MOCK_AWS_RESPONSE, MOCK_DEPENDENCIES, MOCK_ENV } from '@tst/mocks/mocks';
 import { Callback, Context } from 'aws-lambda';
 
@@ -178,7 +178,6 @@ describe('Slack event handler test', () => {
     expect(b.error).toBeUndefined();
     expect(b.chat).toBeDefined();
     expect(b.chat.context.conversationId).toEqual('conversationId');
-    expect(b.chat.context.parentMessageId).toEqual('parentMessageId');
     expect(b.chat.output.conversationId).toBeDefined();
     expect(b.chat.blocks).toBeDefined();
   });
@@ -200,7 +199,7 @@ describe('Slack event handler test', () => {
       {} as Callback,
       {
         ...MOCK_DEPENDENCIES,
-        callClient: () => Promise.resolve(enterpriseQValidResponse2TextSimple),
+        callClient: () => Promise.resolve(amazonQValidResponse2TextSimple),
         getItem: async () =>
           Promise.resolve({
             Item: {
@@ -218,7 +217,6 @@ describe('Slack event handler test', () => {
     expect(b.error).toBeUndefined();
     expect(b.chat).toBeDefined();
     expect(b.chat.context.conversationId).toEqual('conversationId');
-    expect(b.chat.context.parentMessageId).toEqual('parentMessageId');
     expect(b.chat.output.conversationId).toBeDefined();
     expect(b.chat.blocks).toEqual([
       {
@@ -230,7 +228,7 @@ describe('Slack event handler test', () => {
       },
       {
         type: 'actions',
-        block_id: `feedback-${enterpriseQValidResponse2TextSimple.conversationId}-${enterpriseQValidResponse2TextSimple.systemMessageId}`,
+        block_id: `feedback-${amazonQValidResponse2TextSimple.conversationId}-${amazonQValidResponse2TextSimple.systemMessageId}`,
         elements: [
           {
             type: 'button',
@@ -241,7 +239,7 @@ describe('Slack event handler test', () => {
             },
             style: 'primary',
             action_id: 'FEEDBACK_UP',
-            value: enterpriseQValidResponse2TextSimple.systemMessageId
+            value: amazonQValidResponse2TextSimple.systemMessageId
           },
           {
             type: 'button',
@@ -252,7 +250,7 @@ describe('Slack event handler test', () => {
             },
             style: 'danger',
             action_id: 'FEEDBACK_DOWN',
-            value: enterpriseQValidResponse2TextSimple.systemMessageId
+            value: amazonQValidResponse2TextSimple.systemMessageId
           }
         ]
       }
@@ -294,7 +292,6 @@ describe('Slack event handler test', () => {
     expect(b.error).toBeDefined();
     expect(b.chat).toBeDefined();
     expect(b.chat.context.conversationId).toEqual('conversationId');
-    expect(b.chat.context.parentMessageId).toEqual('parentMessageId');
     expect(b.chat.blocks).toBeDefined();
   });
 
@@ -365,7 +362,7 @@ describe('Slack event handler test', () => {
               next_cursor: 'bmV4dF90czoxNTEyMDg1ODYxMDAwNTQz'
             }
           }),
-        callClient: () => Promise.resolve(enterpriseQValidResponse2TextSimple),
+        callClient: () => Promise.resolve(amazonQValidResponse2TextSimple),
         getItem: async () =>
           Promise.resolve({
             Item: {
@@ -383,9 +380,9 @@ describe('Slack event handler test', () => {
     expect(b.chat).toEqual({
       context: {},
       prompt:
-        'Given that following conversation thread history in JSON:\n[{"name":"Gregory Spengler","message":"I find you punny and would like to smell your nose letter","date":"2017-11-30T23:52:30.000Z"},{"name":"Gregory Spengler","message":"What, you want to smell my shoes better?","date":"2017-12-01T05:00:34.000Z"}]\n----------\nmore',
+        'Given the following conversation thread history in JSON:\n[{"name":"Gregory Spengler","message":"I find you punny and would like to smell your nose letter","date":"2017-11-30T23:52:30.000Z"}]\n----------\nmore',
       output: {
-        textMessage: 'This is a simple text\n and now with a \n### header\n# another header',
+        systemMessage: 'This is a simple text\n and now with a \n### header\n# another header',
         conversationId: '80a6642c-8b3d-433e-a9cb-233b42a0d63a',
         sourceAttributions: [],
         systemMessageId: 'e5a23752-3f31-4fee-83fe-56fbd7803540',

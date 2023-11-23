@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/my-enterprise-q-slack-bot.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/my-amazon-q-slack-bot.ts",
   "build": "tsc",
   "watch": {
     "include": [

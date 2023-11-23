@@ -19,12 +19,12 @@ extract_version() {
 # Commands and minimum versions
 commands="node npm tsc esbuild jq aws cdk"
 node_version="18.0.0"
-npm_version="10.2.0"
+npm_version="9.5.1"
 tsc_version="3.8.0"
 esbuild_version="0.19.0"
 jq_version="1.5"
-aws_version="2.13.0"
-cdk_version="2.110.0"
+aws_version="2.10.2"
+cdk_version="2.94.0"
 
 status=0
 
