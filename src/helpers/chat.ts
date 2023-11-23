@@ -38,12 +38,12 @@ export type ChatDependencies = typeof chatDependencies;
 
 export type callClient = (
   message: string,
-  chatContextFiles: ChatContextFile[],
+  attachments: Attachment[],
   env: SlackEventsEnv,
   context?: { conversationId: string; parentMessageId: string }
 ) => ChatResponse;
 
-export interface ChatContextFile {
+export interface Attachment {
   name: string;
   data: string;
 }

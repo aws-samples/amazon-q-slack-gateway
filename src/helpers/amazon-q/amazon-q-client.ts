@@ -1,7 +1,7 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
 
-import { ChatContextFile, ChatResponse } from '@helpers/chat';
+import { Attachment, ChatResponse } from '@helpers/chat';
 import { makeLogger } from '@src/logging';
 import { v4 as uuid } from 'uuid';
 
@@ -64,7 +64,7 @@ export const getClient = (env: SlackEventsEnv) => {
 
 export const callClient = async (
   message: string,
-  chatContextFiles: ChatContextFile[],
+  attachments: Attachment[],
   env: SlackEventsEnv,
   context?: {
     conversationId: string;
@@ -76,7 +76,7 @@ export const callClient = async (
     userId: env.AMAZON_Q_USER_ID,
     clientToken: uuid(),
     userMessage: message,
-    ...(chatContextFiles.length > 0 && { chatContextFiles }),
+    ...(attachments.length > 0 && { attachments }),
     ...context
   };
 

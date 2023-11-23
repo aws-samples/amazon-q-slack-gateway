@@ -3,7 +3,7 @@ import { createButton, getMarkdownBlocks, SLACK_ACTION } from '@helpers/slack/sl
 import { AmazonQResponse } from '@helpers/amazon-q/amazon-q-client';
 import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
-import { ChatDependencies, ChatContextFile } from '@src/helpers/chat';
+import { ChatDependencies, Attachment } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
 
 const logger = makeLogger('amazon-q-helpers');
@@ -14,7 +14,7 @@ const WARN_TRUNCATED = `| Please note that you do not have all the conversation 
 
 export const chat = async (
   incomingMessage: string,
-  chatContextFiles: ChatContextFile[],
+  attachments: Attachment[],
   dependencies: ChatDependencies,
   env: SlackEventsEnv,
   context?: {
@@ -32,7 +32,7 @@ export const chat = async (
           ) + WARN_TRUNCATED
         : incomingMessage;
 
-    const response = await dependencies.callClient(inputMessage, chatContextFiles, env, context);
+    const response = await dependencies.callClient(inputMessage, attachments, env, context);
     logger.debug(`AmazonQ chatSync response: ${JSON.stringify(response)}`);
     return response;
   } catch (error) {

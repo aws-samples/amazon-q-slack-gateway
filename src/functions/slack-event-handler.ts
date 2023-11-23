@@ -11,7 +11,7 @@ import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
 import { chat } from '@helpers/amazon-q/amazon-q-helpers';
 import { UsersInfoResponse } from '@slack/web-api';
-import { ChatContextFile } from '@src/helpers/chat';
+import { Attachment } from '@src/helpers/chat';
 import { FileElement } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 
 const logger = makeLogger('slack-event-handler');
@@ -50,8 +50,8 @@ const SUPPORTED_FILE_TYPES = [
 const attachFiles = async (
   slackEventsEnv: SlackEventsEnv,
   files: FileElement[]
-): Promise<ChatContextFile[]> => {
-  const newChatContextFiles: ChatContextFile[] = [];
+): Promise<Attachment[]> => {
+  const newAttachments: Attachment[] = [];
   for (const f of files) {
     // Check if the file type is supported
     if (
@@ -60,7 +60,7 @@ const attachFiles = async (
       !isEmpty(f.url_private_download) &&
       !isEmpty(f.name)
     ) {
-      newChatContextFiles.push({
+      newAttachments.push({
         name: f.name,
         data: await chatDependencies.retrieveAttachment(slackEventsEnv, f.url_private_download)
       });
@@ -70,7 +70,7 @@ const attachFiles = async (
       );
     }
   }
-  return newChatContextFiles;
+  return newAttachments;
 };
 
 export const handler = async (
@@ -170,7 +170,7 @@ export const handler = async (
     parentMessageId: channelMetadata?.systemMessageId
   };
 
-  let chatContextFiles: ChatContextFile[] = [];
+  let attachments: Attachment[] = [];
   const input = [];
   const userInformationCache: Record<string, UsersInfoResponse> = {};
   const stripMentions = (text?: string) => text?.replace(/<@[A-Z0-9]+>/g, '').trim();
@@ -219,7 +219,7 @@ export const handler = async (
         });
 
         if (!isEmpty(m.files)) {
-          chatContextFiles.push(...(await attachFiles(slackEventsEnv, m.files)));
+          attachments.push(...(await attachFiles(slackEventsEnv, m.files)));
         }
       }
 
@@ -242,18 +242,18 @@ export const handler = async (
 
   // attach files (if any) from current message
   if (!isEmpty(body.event.files)) {
-    chatContextFiles.push(...(await attachFiles(slackEventsEnv, body.event.files)));
+    attachments.push(...(await attachFiles(slackEventsEnv, body.event.files)));
   }
   // Limit file attachments to the last MAX_FILE_ATTACHMENTS
-  if (chatContextFiles.length > MAX_FILE_ATTACHMENTS) {
+  if (attachments.length > MAX_FILE_ATTACHMENTS) {
     logger.debug(
-      `Too many attached files (${chatContextFiles.length}). Attaching the last ${MAX_FILE_ATTACHMENTS} files.`
+      `Too many attached files (${attachments.length}). Attaching the last ${MAX_FILE_ATTACHMENTS} files.`
     );
-    chatContextFiles = chatContextFiles.slice(-MAX_FILE_ATTACHMENTS);
+    attachments = attachments.slice(-MAX_FILE_ATTACHMENTS);
   }
 
   const [output, slackMessage] = await Promise.all([
-    chat(prompt, chatContextFiles, dependencies, slackEventsEnv, context),
+    chat(prompt, attachments, dependencies, slackEventsEnv, context),
     dependencies.sendSlackMessage(
       slackEventsEnv,
       body.event.channel,
