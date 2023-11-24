@@ -17,14 +17,27 @@ import {
 } from 'aws-cdk-lib/aws-iam';
 import { StackEnvironment } from '../bin/my-amazon-q-slack-bot';
 
+import * as fs from 'fs';
+const packageJson = fs.readFileSync('package.json', 'utf-8');
+const version = JSON.parse(packageJson).version;
+const STACK_DESCRIPTION = `Amazon Q Slack Gateway - v${version}`;
+
 export class MyAmazonQSlackBotStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: cdk.StackProps, env: StackEnvironment) {
-    super(scope, id, props);
+    super(scope, id, {
+      ...props,
+      description: STACK_DESCRIPTION
+    });
 
     const vpc = new Vpc(this, `${props.stackName}-VPC`);
 
+    const initialSecretContent = JSON.stringify({
+      SlackSigningSecret: '<Replace with Signing Secret>',
+      SlackBotUserOAuthToken: '<Replace with Bot User OAuth Token>'
+    });
     const slackSecret = new Secret(this, `${props.stackName}-Secret`, {
-      secretName: `${props.stackName}-Secret`
+      secretName: `${props.stackName}-Secret`,
+      secretStringValue: cdk.SecretValue.unsafePlainText(initialSecretContent)
     });
 
     const dynamoCache = new Table(this, `${props.stackName}-DynamoCache`, {
@@ -33,7 +46,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         name: 'channel',
         type: AttributeType.STRING
       },
-      timeToLiveAttribute: 'expireAt'
+      timeToLiveAttribute: 'expireAt',
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     const messageMetadata = new Table(this, `${props.stackName}-MessageMetadata`, {
@@ -42,7 +56,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         name: 'messageId',
         type: AttributeType.STRING
       },
-      timeToLiveAttribute: 'expireAt'
+      timeToLiveAttribute: 'expireAt',
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     [
