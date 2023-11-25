@@ -1,6 +1,6 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
-
+import { isEmpty } from '@src/utils';
 import { Attachment, ChatResponse } from '@helpers/chat';
 import { makeLogger } from '@src/logging';
 import { v4 as uuid } from 'uuid';
@@ -50,6 +50,9 @@ let amazonQClient: unknown = null;
 export const getClient = (env: SlackEventsEnv) => {
   if (amazonQClient === null) {
     initAmazonQSDK();
+    if (isEmpty(env.AMAZON_Q_ENDPOINT)) {
+      env.AMAZON_Q_ENDPOINT = `https://qbusiness.${env.AMAZON_Q_REGION}.api.aws`;
+    }
     logger.debug(
       `Initiating AmazonQ client with region ${env.AMAZON_Q_REGION} and endpoint ${env.AMAZON_Q_ENDPOINT}`
     );
