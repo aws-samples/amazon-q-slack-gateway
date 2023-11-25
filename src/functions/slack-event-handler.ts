@@ -155,9 +155,11 @@ export const handler = async (
     };
   }
 
+  // 
+
   const channelKey = getChannelKey(
     body.event.type,
-    body.event.team,
+    body.team_id,
     body.event.channel,
     body.event.event_ts,
     body.event.thread_ts
