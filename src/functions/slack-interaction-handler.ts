@@ -146,6 +146,5 @@ export const handler = async (
     }
   }
 
-  // TODO: implement logic for interactions
   return { statusCode: 200, body: 'Handled block action interactions!' };
 };

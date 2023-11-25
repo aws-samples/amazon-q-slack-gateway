@@ -5,7 +5,7 @@ import { Attachment, ChatResponse } from '@helpers/chat';
 import { makeLogger } from '@src/logging';
 import { v4 as uuid } from 'uuid';
 
-// I am not happy about this but we must to do as those types are not yet available in CDK
+// Required, as those types are not yet available in CDK
 /* eslint @typescript-eslint/no-var-requires: "off" */
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 const AWS = require('aws-sdk');

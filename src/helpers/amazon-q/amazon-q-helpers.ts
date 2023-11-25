@@ -23,8 +23,9 @@ export const chat = async (
   }
 ): Promise<AmazonQResponse | Error> => {
   try {
-    // I do not like this, but we have a hard limitation
-    // I am wondering if the service will provide a way to inject a prompt as an individual parameter
+    // Enforce max input message limit - may cause undesired side effects
+    // TODO consider 'smarter' truncating of number of chat history messages, etc. rather
+    // than simple input string truncation which may corrupt JSON formatting of message history
     const inputMessage =
       incomingMessage.length > AMAZON_Q_MSG_LIMIT
         ? incomingMessage.slice(

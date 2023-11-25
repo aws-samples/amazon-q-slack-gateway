@@ -73,7 +73,7 @@ const attachFiles = async (
   return newAttachments;
 };
 
-const FEEDBACK_MESSAGE = "Open Slack to provide feedback";
+const FEEDBACK_MESSAGE = 'Open Slack to provide feedback';
 
 export const handler = async (
   event: {
@@ -166,7 +166,9 @@ export const handler = async (
   );
 
   const channelMetadata = await getChannelMetadata(channelKey, dependencies, slackEventsEnv);
-  logger.debug(`ChannelKey: ${channelKey}, Cached channel metadata: ${JSON.stringify(channelMetadata)} `)
+  logger.debug(
+    `ChannelKey: ${channelKey}, Cached channel metadata: ${JSON.stringify(channelMetadata)} `
+  );
 
   const context = {
     conversationId: channelMetadata?.conversationId,
@@ -271,7 +273,7 @@ export const handler = async (
   ]);
 
   if (output instanceof Error) {
-    const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`
+    const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
     const blocks = [getMarkdownBlock(errMsgWithDetails)];
 
     await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
