@@ -73,6 +73,8 @@ const attachFiles = async (
   return newAttachments;
 };
 
+const FEEDBACK_MESSAGE = "Open Slack to provide feedback";
+
 export const handler = async (
   event: {
     body: string;
@@ -155,8 +157,6 @@ export const handler = async (
     };
   }
 
-  // 
-
   const channelKey = getChannelKey(
     body.event.type,
     body.team_id,
@@ -208,6 +208,10 @@ export const handler = async (
       // last element in threadHistory message array.
       for (const m of threadHistory.messages.slice(0, -1)) {
         if (isEmpty(m.user)) {
+          continue;
+        }
+
+        if (m.text === FEEDBACK_MESSAGE) {
           continue;
         }
 
@@ -306,7 +310,7 @@ export const handler = async (
   await dependencies.sendSlackMessage(
     slackEventsEnv,
     body.event.channel,
-    `Open Slack to provide feedback`,
+    FEEDBACK_MESSAGE,
     dependencies.getFeedbackBlocks(output),
     body.event.type === 'app_mention' ? body.event.ts : undefined
   );
