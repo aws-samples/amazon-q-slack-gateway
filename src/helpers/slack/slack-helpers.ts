@@ -12,7 +12,7 @@ const logger = makeLogger('slack-helpers');
 
 let secretManagerClient: SecretsManager | null = null;
 
-export const ERROR_MSG = 'An error has occurred. Our team has been notified.';
+export const ERROR_MSG = '*_Processing error_*';
 const getSecretManagerClient = (env: SlackInteractionsEnv | SlackEventsEnv) => {
   if (secretManagerClient === null) {
     secretManagerClient = new SecretsManager({ region: env.REGION });
