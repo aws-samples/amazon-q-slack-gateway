@@ -37,7 +37,11 @@ export const chat = async (
     return response;
   } catch (error) {
     logger.error(`Caught Exception: ${JSON.stringify(error)}`);
-    return new Error(`Caught Exception: ${JSON.stringify(error)}`);
+    if (error instanceof Error) {
+      return new Error(error.message);
+    } else {
+      return new Error(`${JSON.stringify(error)}`);
+    }
   }
 };
 

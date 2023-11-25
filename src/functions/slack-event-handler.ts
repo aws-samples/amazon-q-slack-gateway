@@ -164,6 +164,7 @@ export const handler = async (
   );
 
   const channelMetadata = await getChannelMetadata(channelKey, dependencies, slackEventsEnv);
+  logger.debug(`ChannelKey: ${channelKey}, Cached channel metadata: ${JSON.stringify(channelMetadata)} `)
 
   const context = {
     conversationId: channelMetadata?.conversationId,
@@ -264,9 +265,10 @@ export const handler = async (
   ]);
 
   if (output instanceof Error) {
-    const blocks = [getMarkdownBlock(ERROR_MSG)];
+    const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`
+    const blocks = [getMarkdownBlock(errMsgWithDetails)];
 
-    await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, ERROR_MSG, blocks);
+    await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
 
     return {
       statusCode: 200,
