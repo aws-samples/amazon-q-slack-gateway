@@ -16,6 +16,7 @@ export interface AmazonQResponse extends ChatResponse {
   systemMessageId: string;
   userMessageId: string;
   sourceAttributions?: SourceAttribution[];
+  failedAttachments?: AttachmentOutput[];
 }
 
 export interface SourceAttribution {
@@ -30,6 +31,17 @@ export interface SourceAttribution {
 export interface TextSegment {
   beginOffset?: number;
   endOffset?: number;
+}
+
+export interface AttachmentOutput {
+  name: string;
+  status: string;
+  error: AttachmentErrorDetail;
+}
+
+export interface AttachmentErrorDetail {
+  errorMessage: string;
+  errorCode: string;
 }
 
 export const initAmazonQSDK = () => {

@@ -287,6 +287,22 @@ export const handler = async (
     };
   }
 
+  if (!isEmpty(output.failedAttachments)) {
+    // Append error message for failed attachments to systemMessage
+    const fileErrorMessages = [];
+    for (const f of output.failedAttachments) {
+      if (f.status === 'FAILED') {
+        logger.debug(`Failed attachment: File ${f.name} - ${f.error.errorMessage}`);
+        fileErrorMessages.push(` \u2022 ${f.name}: ${f.error.errorMessage}`);
+      }
+    }
+    if (!isEmpty(fileErrorMessages)) {
+      output.systemMessage = `${
+        output.systemMessage
+      }\n\n*_Failed attachments:_*\n${fileErrorMessages.join('\n')}`;
+    }
+  }
+
   const blocks = [
     ...dependencies.getResponseAsBlocks(output),
     ...dependencies.getFeedbackBlocks(output)
