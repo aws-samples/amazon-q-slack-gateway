@@ -9,23 +9,71 @@ import {
 } from '@helpers/chat';
 import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
-import { chat } from '@helpers/enterprise-q/enterprise-q-helpers';
+import { chat } from '@helpers/amazon-q/amazon-q-helpers';
 import { UsersInfoResponse } from '@slack/web-api';
+import { Attachment } from '@src/helpers/chat';
+import { FileElement } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 
 const logger = makeLogger('slack-event-handler');
 
 const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
   REGION: getOrThrowIfEmpty(env.AWS_REGION ?? env.AWS_DEFAULT_REGION),
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
-  ENTERPRISE_Q_ENDPOINT: env.ENTERPRISE_Q_ENDPOINT,
-  ENTERPRISE_Q_APP_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_APP_ID),
-  ENTERPRISE_Q_USER_ID: getOrThrowIfEmpty(env.ENTERPRISE_Q_USER_ID),
-  ENTERPRISE_Q_REGION: getOrThrowIfEmpty(env.ENTERPRISE_Q_REGION),
+  AMAZON_Q_ENDPOINT: env.AMAZON_Q_ENDPOINT,
+  AMAZON_Q_APP_ID: getOrThrowIfEmpty(env.AMAZON_Q_APP_ID),
+  AMAZON_Q_USER_ID: env.AMAZON_Q_USER_ID,
+  AMAZON_Q_REGION: getOrThrowIfEmpty(env.AMAZON_Q_REGION),
+  CONTEXT_DAYS_TO_LIVE: getOrThrowIfEmpty(env.CONTEXT_DAYS_TO_LIVE),
   CACHE_TABLE_NAME: getOrThrowIfEmpty(env.CACHE_TABLE_NAME),
   MESSAGE_METADATA_TABLE_NAME: getOrThrowIfEmpty(env.MESSAGE_METADATA_TABLE_NAME)
 });
 
 export type SlackEventsEnv = ReturnType<typeof processSlackEventsEnv>;
+
+const MAX_FILE_ATTACHMENTS = 5;
+const SUPPORTED_FILE_TYPES = [
+  'text',
+  'html',
+  'xml',
+  'markdown',
+  'csv',
+  'json',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'doc',
+  'docx',
+  'rtf',
+  'pdf'
+];
+const attachFiles = async (
+  slackEventsEnv: SlackEventsEnv,
+  files: FileElement[]
+): Promise<Attachment[]> => {
+  const newAttachments: Attachment[] = [];
+  for (const f of files) {
+    // Check if the file type is supported
+    if (
+      !isEmpty(f.filetype) &&
+      SUPPORTED_FILE_TYPES.includes(f.filetype) &&
+      !isEmpty(f.url_private_download) &&
+      !isEmpty(f.name)
+    ) {
+      newAttachments.push({
+        name: f.name,
+        data: await chatDependencies.retrieveAttachment(slackEventsEnv, f.url_private_download)
+      });
+    } else {
+      logger.debug(
+        `Ignoring file attachment with unsupported filetype '${f.filetype}' - not one of '${SUPPORTED_FILE_TYPES}'`
+      );
+    }
+  }
+  return newAttachments;
+};
+
+const FEEDBACK_MESSAGE = 'Open Slack to provide feedback';
 
 export const handler = async (
   event: {
@@ -40,7 +88,7 @@ export const handler = async (
   },
   slackEventsEnv: SlackEventsEnv = processSlackEventsEnv(process.env)
 ): Promise<APIGatewayProxyResult> => {
-  logger.debug(`Received event ${JSON.stringify(event)}`);
+  logger.debug(`Received event: ${JSON.stringify(event)}`);
 
   logger.debug(`dependencies ${JSON.stringify(dependencies)}`);
   if (isEmpty(event.body)) {
@@ -67,15 +115,12 @@ export const handler = async (
   }
 
   const body = JSON.parse(event.body);
-  logger.debug(`Received body ${JSON.stringify(body)}`);
+  logger.debug(`Received message body ${JSON.stringify(body)}`);
 
   // Read why it is needed: https://api.slack.com/events/url_verification
   if (!isEmpty(body.challenge)) {
     return { statusCode: 200, body: body.challenge };
   }
-
-  // You can extend this lambda to handle more event type
-  logger.debug(`Received event ${JSON.stringify(body.event)}`);
 
   if (!isEmpty(event.headers['X-Slack-Retry-Reason'])) {
     const retry_reason = event.headers['X-Slack-Retry-Reason'];
@@ -92,6 +137,7 @@ export const handler = async (
     };
   }
 
+  // handle message and threads with app_mention
   if (!['message', 'app_mention'].includes(body.event.type) || isEmpty(body.event.client_msg_id)) {
     console.log(`Ignoring type: ${body.type}`);
     return {
@@ -113,22 +159,42 @@ export const handler = async (
 
   const channelKey = getChannelKey(
     body.event.type,
-    body.event.team,
+    body.team_id,
     body.event.channel,
     body.event.event_ts,
     body.event.thread_ts
   );
 
   const channelMetadata = await getChannelMetadata(channelKey, dependencies, slackEventsEnv);
+  logger.debug(
+    `ChannelKey: ${channelKey}, Cached channel metadata: ${JSON.stringify(channelMetadata)} `
+  );
 
   const context = {
     conversationId: channelMetadata?.conversationId,
-    parentMessageId: channelMetadata?.messageId
+    parentMessageId: channelMetadata?.systemMessageId
   };
 
+  let attachments: Attachment[] = [];
   const input = [];
   const userInformationCache: Record<string, UsersInfoResponse> = {};
   const stripMentions = (text?: string) => text?.replace(/<@[A-Z0-9]+>/g, '').trim();
+
+  // retrieve and cache user info
+  if (isEmpty(userInformationCache[body.event.user])) {
+    userInformationCache[body.event.user] = await dependencies.getUserInfo(
+      slackEventsEnv,
+      body.event.user
+    );
+  }
+  if (isEmpty(slackEventsEnv.AMAZON_Q_USER_ID)) {
+    // Use slack user email as Q UserId
+    const userEmail = userInformationCache[body.event.user].user?.profile?.email;
+    slackEventsEnv.AMAZON_Q_USER_ID = userEmail;
+    logger.debug(
+      `User's email (${userEmail}) used as Amazon Q userId, since AmazonQUserId is empty.`
+    );
+  }
 
   if (!isEmpty(body.event.thread_ts)) {
     const threadHistory = await dependencies.retrieveThreadHistory(
@@ -139,9 +205,15 @@ export const handler = async (
 
     if (threadHistory.ok && !isEmpty(threadHistory.messages)) {
       const promptConversationHistory = [];
-      // Keep this sequential as we are using an in memory map to avoid useless call
-      for (const m of threadHistory.messages) {
+      // The last message in the threadHistory result is also the current message, so
+      // to avoid duplicating chatHistory with the current message we skip the
+      // last element in threadHistory message array.
+      for (const m of threadHistory.messages.slice(0, -1)) {
         if (isEmpty(m.user)) {
+          continue;
+        }
+
+        if (m.text === FEEDBACK_MESSAGE) {
           continue;
         }
 
@@ -154,6 +226,10 @@ export const handler = async (
           message: stripMentions(m.text),
           date: !isEmpty(m.ts) ? new Date(Number(m.ts) * 1000).toISOString() : undefined
         });
+
+        if (!isEmpty(m.files)) {
+          attachments.push(...(await attachFiles(slackEventsEnv, m.files)));
+        }
       }
 
       if (promptConversationHistory.length > 0) {
@@ -162,7 +238,7 @@ export const handler = async (
         context.parentMessageId = undefined;
 
         input.push(
-          `Given that following conversation thread history in JSON:\n${JSON.stringify(
+          `Given the following conversation thread history in JSON:\n${JSON.stringify(
             promptConversationHistory
           )}`
         );
@@ -172,8 +248,21 @@ export const handler = async (
 
   input.push(stripMentions(body.event.text));
   const prompt = input.join(`\n${'-'.repeat(10)}\n`);
+
+  // attach files (if any) from current message
+  if (!isEmpty(body.event.files)) {
+    attachments.push(...(await attachFiles(slackEventsEnv, body.event.files)));
+  }
+  // Limit file attachments to the last MAX_FILE_ATTACHMENTS
+  if (attachments.length > MAX_FILE_ATTACHMENTS) {
+    logger.debug(
+      `Too many attached files (${attachments.length}). Attaching the last ${MAX_FILE_ATTACHMENTS} files.`
+    );
+    attachments = attachments.slice(-MAX_FILE_ATTACHMENTS);
+  }
+
   const [output, slackMessage] = await Promise.all([
-    chat(prompt, dependencies, slackEventsEnv, context),
+    chat(prompt, attachments, dependencies, slackEventsEnv, context),
     dependencies.sendSlackMessage(
       slackEventsEnv,
       body.event.channel,
@@ -184,9 +273,10 @@ export const handler = async (
   ]);
 
   if (output instanceof Error) {
-    const blocks = [getMarkdownBlock(ERROR_MSG)];
+    const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
+    const blocks = [getMarkdownBlock(errMsgWithDetails)];
 
-    await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, ERROR_MSG, blocks);
+    await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
 
     return {
       statusCode: 200,
@@ -195,6 +285,22 @@ export const handler = async (
         error: output
       })
     };
+  }
+
+  if (!isEmpty(output.failedAttachments)) {
+    // Append error message for failed attachments to systemMessage
+    const fileErrorMessages = [];
+    for (const f of output.failedAttachments) {
+      if (f.status === 'FAILED') {
+        logger.debug(`Failed attachment: File ${f.name} - ${f.error.errorMessage}`);
+        fileErrorMessages.push(` \u2022 ${f.name}: ${f.error.errorMessage}`);
+      }
+    }
+    if (!isEmpty(fileErrorMessages)) {
+      output.systemMessage = `${
+        output.systemMessage
+      }\n\n*_Failed attachments:_*\n${fileErrorMessages.join('\n')}`;
+    }
   }
 
   const blocks = [
@@ -206,7 +312,7 @@ export const handler = async (
     saveChannelMetadata(
       channelKey,
       output.conversationId,
-      output.messageId,
+      output.systemMessageId,
       dependencies,
       slackEventsEnv
     ),
@@ -214,7 +320,7 @@ export const handler = async (
     dependencies.updateSlackMessage(
       slackEventsEnv,
       slackMessage,
-      output.textMessage,
+      output.systemMessage,
       dependencies.getResponseAsBlocks(output)
     )
   ]);
@@ -222,7 +328,7 @@ export const handler = async (
   await dependencies.sendSlackMessage(
     slackEventsEnv,
     body.event.channel,
-    `Open Slack to provide feedback`,
+    FEEDBACK_MESSAGE,
     dependencies.getFeedbackBlocks(output),
     body.event.type === 'app_mention' ? body.event.ts : undefined
   );

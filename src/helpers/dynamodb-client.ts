@@ -6,6 +6,9 @@ export const client = new AWS.DynamoDB.DocumentClient({
   convertResponseTypes: false // Avoid extra latency
 });
 
+export const deleteItem = async (args: AWS.DynamoDB.DocumentClient.DeleteItemInput) =>
+  await client.delete(args).promise();
+
 export const putItem = async (args: AWS.DynamoDB.DocumentClient.PutItemInput) =>
   await client.put(args).promise();
 

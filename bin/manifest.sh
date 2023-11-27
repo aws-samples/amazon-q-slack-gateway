@@ -26,11 +26,20 @@ STACKNAME=$(jq -r ".StackName" "$ENVIRONMENT_FILE" 2> /dev/null)
 CDK_OUT_CONTENT=$(<"$CDK_OUT_FILE")
 SLACK_EVENT_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackEventHandlerApiEndpoint")) | .value')
 SLACK_INTERACTION_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackInteractionHandlerApiEndpoint")) | .value')
+SLACK_COMMAND_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackCommandHandlerApiEndpoint")) | .value')
 
 # Use sed to replace the tokens with the extracted values in the template file and write to the new file
-sed "s|\"!!! \[SlackBotName\] !!!\"|\"$STACKNAME\"|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
-sed -i "s|\"!!! \[SlackEventHandlerApiOutput\] !!!\"|\"$SLACK_EVENT_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
-sed -i "s|\"!!! \[SlackInteractionHandlerApiOutput\] !!!\"|\"$SLACK_INTERACTION_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+if sed --version 2>/dev/null | grep -q GNU; then # GNU sed
+    sed "s|\"!!! \[SlackBotName\] !!!\"|\"$STACKNAME\"|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+    sed -i "s|\"!!! \[SlackEventHandlerApiOutput\] !!!\"|\"$SLACK_EVENT_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+    sed -i "s|\"!!! \[SlackInteractionHandlerApiOutput\] !!!\"|\"$SLACK_INTERACTION_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+    sed -i "s|\"!!! \[SlackCommandApiOutput\] !!!\"|\"$SLACK_COMMAND_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+else
+    sed "s|\"!!! \[SlackBotName\] !!!\"|\"$STACKNAME\"|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+    sed -i "" "s|\"!!! \[SlackEventHandlerApiOutput\] !!!\"|\"$SLACK_EVENT_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+    sed -i "" "s|\"!!! \[SlackInteractionHandlerApiOutput\] !!!\"|\"$SLACK_INTERACTION_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+    sed -i "" "s|\"!!! \[SlackCommandApiOutput\] !!!\"|\"$SLACK_COMMAND_HANDLER_API_OUTPUT\"|g" "$OUTPUT_FILE"
+fi
 
 # Display a message to show completion
 echo "Slack app manifest created: $OUTPUT_FILE."

@@ -1,17 +1,18 @@
+import axios from 'axios';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { SecretsManager } from 'aws-sdk';
 import { Block, ChatPostMessageResponse, ModalView, WebClient } from '@slack/web-api';
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
 import { makeLogger } from '@src/logging';
-import { SourceAttribution } from '@helpers/enterprise-q/enterprise-q-client';
+import { SourceAttribution } from '@helpers/amazon-q/amazon-q-client';
 import { isEmpty } from '@src/utils';
 
 const logger = makeLogger('slack-helpers');
 
 let secretManagerClient: SecretsManager | null = null;
 
-export const ERROR_MSG = 'An error has occurred. Our team has been notified.';
+export const ERROR_MSG = '*_Processing error_*';
 const getSecretManagerClient = (env: SlackInteractionsEnv | SlackEventsEnv) => {
   if (secretManagerClient === null) {
     secretManagerClient = new SecretsManager({ region: env.REGION });
@@ -56,6 +57,27 @@ export const retrieveThreadHistory = async (
 
   return response;
 };
+
+export const retrieveAttachment = async (
+  env: SlackInteractionsEnv | SlackEventsEnv,
+  url: string
+) => {
+  const secret = await getSlackSecret(env);
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${secret.SlackBotUserOAuthToken}`
+    },
+    responseType: 'arraybuffer' // Important for handling binary files
+  });
+
+  // Convert the response data to a base64 string
+  const base64String = Buffer.from(response.data, 'binary').toString('base64');
+
+  // base64String can be long.. log just enough to validate file contents when troubleshooting.
+  logger.debug(`retrieveAttachment from ${url}: ${base64String.substring(0, 300)}`);
+  return base64String;
+};
+
 export const sendSlackMessage = async (
   env: SlackInteractionsEnv | SlackEventsEnv,
   channel: string,
@@ -148,7 +170,7 @@ export enum SLACK_ACTION {
   FEEDBACK_UP
 }
 
-export const createButton = (text: string, messageId: string) => ({
+export const createButton = (text: string, systemMessageId: string) => ({
   type: 'actions',
   elements: [
     {
@@ -159,7 +181,7 @@ export const createButton = (text: string, messageId: string) => ({
         emoji: true
       },
       style: 'primary',
-      value: messageId,
+      value: systemMessageId,
       action_id: SLACK_ACTION[SLACK_ACTION.VIEW_SOURCES]
     }
   ]

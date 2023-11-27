@@ -1,26 +1,28 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { Block } from '@slack/web-api';
 import {
-  EnterpriseQResponse,
+  AmazonQResponse,
   callClient,
   submitFeedbackRequest
-} from '@helpers/enterprise-q/enterprise-q-client';
-import { getItem, putItem } from '@helpers/dynamodb-client';
+} from '@helpers/amazon-q/amazon-q-client';
+import { deleteItem, getItem, putItem } from '@helpers/dynamodb-client';
 import {
   getUserInfo,
   retrieveThreadHistory,
+  retrieveAttachment,
   sendSlackMessage,
   updateSlackMessage
 } from '@helpers/slack/slack-helpers';
-import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/enterprise-q/enterprise-q-helpers';
+import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
 
 export interface ChatResponse {
-  textMessage: string;
+  systemMessage: string;
 }
 
 export const chatDependencies = {
   callClient,
   submitFeedbackRequest,
+  deleteItem,
   getItem,
   putItem,
   sendSlackMessage,
@@ -28,6 +30,7 @@ export const chatDependencies = {
   getResponseAsBlocks,
   getFeedbackBlocks,
   retrieveThreadHistory,
+  retrieveAttachment,
   getUserInfo
 };
 
@@ -35,9 +38,15 @@ export type ChatDependencies = typeof chatDependencies;
 
 export type callClient = (
   message: string,
+  attachments: Attachment[],
   env: SlackEventsEnv,
   context?: { conversationId: string; parentMessageId: string }
 ) => ChatResponse;
+
+export interface Attachment {
+  name: string;
+  data: string;
+}
 
 export type getResponseAsBlocks = (response: ChatResponse) => Block[] | undefined;
 
@@ -63,42 +72,63 @@ export const getChannelMetadata = async (
     })
   ).Item;
 
-export const saveChannelMetadata = async (
+export const deleteChannelMetadata = async (
   channel: string,
-  conversationId: string,
-  messageId: string,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) =>
+  await dependencies.deleteItem({
+    TableName: env.CACHE_TABLE_NAME,
+    Key: {
+      channel
+    }
+  });
+
+const expireAt = (env: SlackEventsEnv) => {
+  const contextTTL = Number(env.CONTEXT_DAYS_TO_LIVE) * 24 * 60 * 60 * 1000; // milliseconds
+  return Math.floor((Date.now() + contextTTL) / 1000); // Unix time (seconds);
+};
+
+export const saveChannelMetadata = async (
+  channel: string,
+  conversationId: string,
+  systemMessageId: string,
+  dependencies: ChatDependencies,
+  env: SlackEventsEnv
+) => {
   await dependencies.putItem({
     TableName: env.CACHE_TABLE_NAME,
     Item: {
       channel,
       conversationId,
-      messageId,
-      latestTs: Date.now()
+      systemMessageId,
+      latestTs: Date.now(),
+      expireAt: expireAt(env)
     }
   });
+};
 
 export const saveMessageMetadata = async (
-  enterpriseQResponse: EnterpriseQResponse,
+  amazonQResponse: AmazonQResponse,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
-) =>
+) => {
   await dependencies.putItem({
     TableName: env.MESSAGE_METADATA_TABLE_NAME,
     Item: {
-      messageId: enterpriseQResponse.messageId,
-      conversationId: enterpriseQResponse.conversationId,
-      sourceAttribution: enterpriseQResponse.sourceAttribution,
-      aiMessageId: enterpriseQResponse.aiMessageId,
-      humanMessageId: enterpriseQResponse.humanMessageId,
-      ts: Date.now()
+      messageId: amazonQResponse.systemMessageId,
+      conversationId: amazonQResponse.conversationId,
+      sourceAttributions: amazonQResponse.sourceAttributions,
+      systemMessageId: amazonQResponse.systemMessageId,
+      userMessageId: amazonQResponse.userMessageId,
+      ts: Date.now(),
+      expireAt: expireAt(env)
     }
   });
+};
 
 export const getMessageMetadata = async (
-  messageId: string,
+  systemMessageId: string,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) =>
@@ -106,7 +136,7 @@ export const getMessageMetadata = async (
     await dependencies.getItem({
       TableName: env.MESSAGE_METADATA_TABLE_NAME,
       Key: {
-        messageId
+        messageId: systemMessageId
       }
     })
   ).Item;
