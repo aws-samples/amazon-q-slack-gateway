@@ -108,3 +108,17 @@ Let's configure your Slack secrets in order to (1) verify the signature of each 
 4. In the app DM channel, say *Hello*. In a team channel, ask it for help with an @mention.
 5. Enjoy.
 
+## Contributing, and reporting issues
+
+We welcome your contributions to our project. Whether it's a bug report, new feature, correction, or additional
+documentation, we greatly value feedback and contributions from our community.
+
+See [CONTRIBUTING](CONTRIBUTING.md) for more information.
+
+## Security
+
+See [Security issue notifications](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This library is licensed under the MIT-0 License. See the [LICENSE](./LICENSE) file.
