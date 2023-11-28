@@ -45,7 +45,7 @@ export type callClient = (
 
 export interface Attachment {
   name: string;
-  data: string;
+  data: Buffer;
 }
 
 export type getResponseAsBlocks = (response: ChatResponse) => Block[] | undefined;

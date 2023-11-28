@@ -70,12 +70,9 @@ export const retrieveAttachment = async (
     responseType: 'arraybuffer' // Important for handling binary files
   });
 
-  // Convert the response data to a base64 string
-  const base64String = Buffer.from(response.data, 'binary').toString('base64');
-
-  // base64String can be long.. log just enough to validate file contents when troubleshooting.
-  logger.debug(`retrieveAttachment from ${url}: ${base64String.substring(0, 300)}`);
-  return base64String;
+  // log just enough of the attachment content to validate file contents when troubleshooting.
+  logger.debug(`retrieveAttachment from ${url}: ${response.data.slice(0, 300).toString().replace(/\r?\n/g, "")}`);
+  return response.data;
 };
 
 export const sendSlackMessage = async (
