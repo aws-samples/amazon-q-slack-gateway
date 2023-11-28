@@ -51,10 +51,11 @@ prompt_for_value() {
 
 # Read or update values
 stack_name=$(prompt_for_value "StackName" "Name for slack bot" "AmazonQBot" "^[A-Za-z][A-Za-z0-9-]{0,127}$")
-user_id=$(prompt_for_value "AmazonQUserId" "Amazon Q User ID (leave empty to use slack users' email as user Id)" "" "^[^[:space:]]{0,2048}$")
+# From Bash 3 - testing with MacOS - m and n must be in the range from 0 to RE_DUP_MAX (default 255), inclusive.
+user_id=$(prompt_for_value "AmazonQUserId" "Amazon Q User ID (leave empty to use slack users' email as user Id)" "" "^[^[:space:]]{0,255}$")
 app_id=$(prompt_for_value "AmazonQAppId" "Amazon Q Application ID (copy from AWS console)" "none" "^[a-zA-Z0-9][a-zA-Z0-9-]{35}$")
 region=$(prompt_for_value "AmazonQRegion" "Amazon Q Region" $(aws configure get region) "^[a-z]{2}-[a-z]+-[0-9]+$")
-endpoint=$(prompt_for_value "AmazonQEndpoint" "Amazon Q Endpoint (leave empty for default endpoint)" "" "^(https:\/\/\S+)?$")
+endpoint=$(prompt_for_value "AmazonQEndpoint" "Amazon Q Endpoint (leave empty for default endpoint)" "" "https://[-[:alnum:]\+&@#/%?=~_|!:,.;]+")
 ttl_days=$(prompt_for_value "ContextDaysToLive" "Number of days to keep conversation context" "90" "^[1-9][0-9]{0,3}$")
 
 # Create or update the JSON file
