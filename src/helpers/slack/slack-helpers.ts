@@ -71,7 +71,12 @@ export const retrieveAttachment = async (
   });
 
   // log just enough of the attachment content to validate file contents when troubleshooting.
-  logger.debug(`retrieveAttachment from ${url}: ${response.data.slice(0, 300).toString().replace(/\r?\n/g, "")}`);
+  logger.debug(
+    `retrieveAttachment from ${url}: ${response.data
+      .slice(0, 300)
+      .toString()
+      .replace(/\r?\n/g, '')}`
+  );
   return response.data;
 };
 
