@@ -32,7 +32,7 @@ This sample Amazon Q slack application is provided as open source — use it as 
 
 Follow the instructions below to deploy the project to your own AWS account and Slack workspace, and start experimenting!
 
-## Deploy the solutiom
+## Deploy the solution
 
 ### 1. Dependencies
 
