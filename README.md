@@ -2,8 +2,8 @@
 
 Amazon Q is a new generative AI-powered application that helps users get work done. Amazon Q can become your tailored business expert and let you discover content, brainstorm ideas, or create summaries using your company’s data safely and securely. For more information see: [Introducing Amazon Q, a new generative AI-powered assistant (preview)](https://aws.amazon.com/blogs/aws/introducing-amazon-q-a-new-generative-ai-powered-assistant-preview)
 
-In this repo we share a project which lets you bring the power of Amazon Q to your users where they already spend a lot of their time collaborating with colleagues... on Slack. Now they can collaborate with Amazon Q as well! It allows your users to:
-- Converse with Amazon Q using Slack Direct Message (DM) to ask questions based on company data, get help creating new content and performing tasks. 
+In this repo we share a project which lets you use Amazon Q's generative AI to enable Slack channel members  to access your organizations data and knowledge sources via conversational question-answering. You can connect to your organization data via data source connectors and integrate it with Slack Gateway for Amazon Q to enable access to your Slack channel members. It allows your users to:
+- Converse with Amazon Q using Slack Direct Message (DM) to ask questions and get answers based on company data, get help creating new content such as emails, and performing tasks. 
 - You can also invite it to participate in your team channels. 
   - In a channel users can ask it questions in a new message, or tag it in a thread at any point. Get it to provide additional data points, resolve a debate, or summarize the conversation and capture next steps. 
 
