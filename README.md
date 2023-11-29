@@ -1,6 +1,6 @@
-# Slack gateway for Amazon Q business (preview)
+# Slack gateway for Amazon Q, your business expert (preview)
 
-Amazon Q for business users is a new generative AI-powered application that helps users get work done. Use Amazon Q to discover content, brainstorm ideas, or create summaries using your company’s data safely and securely without needing to have any generative AI expertise. For more information see: [Introducing Amazon Q, a new generative AI-powered assistant (preview)](https://aws.amazon.com/blogs/aws/introducing-amazon-q-a-new-generative-ai-powered-assistant-preview)
+Amazon Q is a new generative AI-powered application that helps users get work done. Amazon Q can become your tailored business expert and let you discover content, brainstorm ideas, or create summaries using your company’s data safely and securely. For more information see: [Introducing Amazon Q, a new generative AI-powered assistant (preview)](https://aws.amazon.com/blogs/aws/introducing-amazon-q-a-new-generative-ai-powered-assistant-preview)
 
 In this repo we share a project which lets you bring the power of Amazon Q to your users where they already spend a lot of their time collaborating with colleagues... on Slack. Now they can collaborate with Amazon Q as well! It allows your users to:
 - Converse with Amazon Q using Slack Direct Message (DM) to ask questions based on company data, get help creating new content and performing tasks. 
