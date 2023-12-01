@@ -46,6 +46,8 @@ You need to have the following packages installed on your computer to build and 
 6. aws (AWS CLI): https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html 
 7. cdk (AWS CDK): https://docs.aws.amazon.com/cdk/v2/guide/cli.html
 
+You also need to have an existing, working Amazon Q application. If you haven't set one up yet, see [Creating an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/business-use-dg/create-app.html)
+
 ### 2. Initialize and deploy the stack
 
 Copy the GitHub repo to your computer. Either:
@@ -54,9 +56,8 @@ Copy the GitHub repo to your computer. Either:
 
 Navigate into the project root directory and, in a bash shell, run:
 
-1. `./init.sh` - checks your system dependendencies for required packages (see Dependencies above), sets up your environment file, and bootstraps your cdk environment. 
+1. `./init.sh` - checks your system dependendencies for required packages (see Dependencies above), sets up your environment file, and bootstraps your cdk environment.
 2. `./deploy.sh` - runs the cdk build and deploys or updates a stack in your AWS account, creates a slack app manifest file, and outputs a link to the AWS Secrets Manager secret that you will need below.
-
 
 ### 3. Configure your Slack application
 
