@@ -219,7 +219,8 @@ function addSlackAppManifestOutputToTemplate(template) {
     }
     // add manifest output to template
     template.Outputs.SlackAppManifest = {
-        Value: manifestExpression
+        Value: manifestExpression,
+        Description: 'Slack app manifest JSON (copy/paste to create/update slack app)'
     };
 }
 
