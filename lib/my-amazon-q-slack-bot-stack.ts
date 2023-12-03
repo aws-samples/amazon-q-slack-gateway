@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import { CfnOutput } from 'aws-cdk-lib';
 import { Duration } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 
@@ -29,18 +30,28 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       description: STACK_DESCRIPTION
     });
 
-    const vpc = new Vpc(this, `VPC`);
+    // Reference the AWS::StackName directly
+    const refStackName = cdk.Fn.ref('AWS::StackName');
+
+    const vpc = new Vpc(this, `${props.stackName}-VPC`);
 
     const initialSecretContent = JSON.stringify({
       SlackSigningSecret: '<Replace with Signing Secret>',
       SlackBotUserOAuthToken: '<Replace with Bot User OAuth Token>'
     });
-    const slackSecret = new Secret(this, `Secret`, {
-      secretName: `${cdk.Stack.of(this).stackName}-Secret`,
+    const slackSecret = new Secret(this, `${props.stackName}-Secret`, {
+      secretName: `${refStackName}-Secret`,
       secretStringValue: cdk.SecretValue.unsafePlainText(initialSecretContent)
     });
+    // Output URL to the secret in the AWS Management Console
+    const secretConsoleUrl = `https://${this.region}.console.aws.amazon.com/secretsmanager/secret?name=${slackSecret.secretName}&region=${this.region}`;
+    new CfnOutput(this, 'SlackSecretConsoleUrl', {
+      value: secretConsoleUrl,
+      description: 'Click to edit the Slack secrets in the AWS Secrets Manager console'
+    });
 
-    const dynamoCache = new Table(this, `DynamoCache`, {
+    const dynamoCache = new Table(this, `${props.stackName}-DynamoCache`, {
+      tableName: `${refStackName}-channels-metadata`,
       partitionKey: {
         name: 'channel',
         type: AttributeType.STRING
@@ -49,7 +60,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
-    const messageMetadata = new Table(this, `MessageMetadata`, {
+    const messageMetadata = new Table(this, `${props.stackName}-MessageMetadata`, {
+      tableName: `${refStackName}-responses-metadata`,
       partitionKey: {
         name: 'messageId',
         type: AttributeType.STRING
@@ -75,9 +87,10 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         description: 'Lambda function handler for Slack commands'
       }
     ].map((p) => {
-      const suffix = `${p.id}`;
+      const suffix = `${props.stackName}-${p.id}`;
       new LambdaRestApi(this, `${suffix}-Api`, {
         handler: new lambda.NodejsFunction(this, `${suffix}-Fn`, {
+          functionName: `${refStackName}-${p.id}`,
           entry: `src/functions/${p.handler}.ts`,
           handler: `handler`,
           description: `${p.description}, Revision: ${new Date().toISOString()})`,
