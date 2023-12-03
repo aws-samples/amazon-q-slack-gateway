@@ -29,19 +29,18 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       description: STACK_DESCRIPTION
     });
 
-    const vpc = new Vpc(this, `${props.stackName}-VPC`);
+    const vpc = new Vpc(this, `VPC`);
 
     const initialSecretContent = JSON.stringify({
       SlackSigningSecret: '<Replace with Signing Secret>',
       SlackBotUserOAuthToken: '<Replace with Bot User OAuth Token>'
     });
-    const slackSecret = new Secret(this, `${props.stackName}-Secret`, {
-      secretName: `${props.stackName}-Secret`,
+    const slackSecret = new Secret(this, `Secret`, {
+      secretName: `${cdk.Stack.of(this).stackName}-Secret`,
       secretStringValue: cdk.SecretValue.unsafePlainText(initialSecretContent)
     });
 
-    const dynamoCache = new Table(this, `${props.stackName}-DynamoCache`, {
-      tableName: `${env.StackName}-channels-metadata`,
+    const dynamoCache = new Table(this, `DynamoCache`, {
       partitionKey: {
         name: 'channel',
         type: AttributeType.STRING
@@ -50,8 +49,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
-    const messageMetadata = new Table(this, `${props.stackName}-MessageMetadata`, {
-      tableName: `${env.StackName}-responses-metadata`,
+    const messageMetadata = new Table(this, `MessageMetadata`, {
       partitionKey: {
         name: 'messageId',
         type: AttributeType.STRING
@@ -77,14 +75,12 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         description: 'Lambda function handler for Slack commands'
       }
     ].map((p) => {
-      const suffix = `${props.stackName}-${p.id}`;
+      const suffix = `${p.id}`;
       new LambdaRestApi(this, `${suffix}-Api`, {
         handler: new lambda.NodejsFunction(this, `${suffix}-Fn`, {
           entry: `src/functions/${p.handler}.ts`,
           handler: `handler`,
-          description: `${p.description} (Stack: ${
-            props.stackName
-          }, Revision: ${new Date().toISOString()})`,
+          description: `${p.description}, Revision: ${new Date().toISOString()})`,
           timeout: Duration.seconds(30),
           environment: {
             SLACK_SECRET_NAME: slackSecret.secretName,
