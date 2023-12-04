@@ -44,9 +44,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       secretStringValue: cdk.SecretValue.unsafePlainText(initialSecretContent)
     });
     // Output URL to the secret in the AWS Management Console
-    const secretConsoleUrl = `https://${this.region}.console.aws.amazon.com/secretsmanager/secret?name=${slackSecret.secretName}&region=${this.region}`;
     new CfnOutput(this, 'SlackSecretConsoleUrl', {
-      value: secretConsoleUrl,
+      value: `https://${this.region}.console.aws.amazon.com/secretsmanager/secret?name=${slackSecret.secretName}&region=${this.region}`,
       description: 'Click to edit the Slack secrets in the AWS Secrets Manager console'
     });
 
