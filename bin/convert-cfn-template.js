@@ -1,7 +1,7 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as JSZip from 'jszip';
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const fs = require('fs');
+const path = require('path');
+const JSZip = require('jszip');
 
 // Read command line arguments
 const templateName = process.argv[2];

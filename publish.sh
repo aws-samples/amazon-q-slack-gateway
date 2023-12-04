@@ -75,6 +75,7 @@ cdk synthesize --staging  -c environment=$envfile > /dev/null
 
 echo "Converting and uploading Cfn artifacts to S3"
 CDKTEMPLATE="AmazonQSlackGatewayStack.template.json"
+echo node ./bin/convert-cfn-template.js $CDKTEMPLATE $BUCKET $PREFIX_AND_VERSION $REGION
 node ./bin/convert-cfn-template.js $CDKTEMPLATE $BUCKET $PREFIX_AND_VERSION $REGION
 
 MAIN_TEMPLATE="AmazonQSlackGateway.json"
