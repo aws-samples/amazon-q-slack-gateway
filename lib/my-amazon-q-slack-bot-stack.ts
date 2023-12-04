@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
 import { Duration } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
-
 import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Construct } from 'constructs';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
@@ -73,22 +72,25 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       {
         handler: 'slack-event-handler',
         id: 'SlackEventHandler',
-        description: 'Lambda function handler for Slack events'
+        description: 'Handler for Slack events'
       },
       {
         handler: 'slack-interaction-handler',
         id: 'SlackInteractionHandler',
-        description: 'Lambda function handler for Slack interactions'
+        description: 'Handler for Slack interactions'
       },
       {
         handler: 'slack-command-handler',
         id: 'SlackCommandHandler',
-        description: 'Lambda function handler for Slack commands'
+        description: 'Handler for Slack commands'
       }
     ].map((p) => {
-      const suffix = `${props.stackName}-${p.id}`;
-      new LambdaRestApi(this, `${suffix}-Api`, {
-        handler: new lambda.NodejsFunction(this, `${suffix}-Fn`, {
+      const prefix = `${props.stackName}-${p.id}`;
+      new LambdaRestApi(this, `${prefix}-Api`, {
+        // Keep dynamic description (with date) to ensure api is deployed on update to new template
+        description: `${p.description}, Revision: ${new Date().toISOString()})`,
+        deploy: true,
+        handler: new lambda.NodejsFunction(this, `${prefix}-Fn`, {
           functionName: `${refStackName}-${p.id}`,
           entry: `src/functions/${p.handler}.ts`,
           handler: `handler`,
@@ -104,7 +106,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
             CACHE_TABLE_NAME: dynamoCache.tableName,
             MESSAGE_METADATA_TABLE_NAME: messageMetadata.tableName
           },
-          role: new Role(this, `${suffix}-Role`, {
+          role: new Role(this, `${prefix}-Role`, {
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [
               ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')
