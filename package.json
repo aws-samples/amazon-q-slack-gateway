@@ -10,7 +10,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts,.js",
     "lint:fix": "npm run lint -- --fix"
   },
   "devDependencies": {
