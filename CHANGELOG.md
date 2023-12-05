@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - 2023-12-04
 ### Added
  - New 'Easy Button' option for deployment and update using pre-built CloudFormation templates (with no dependency on dev shell, cdk, etc.) - see [README - Deploy the stack](./README.md#1-deploy-the-stack).
- - New `publish.sh` script used to create and publish standalone CloudFormation templates in an S3 bucket - see [README_DEVELOPERS - ](./README_DEVELOPERS.md#publish-the-solution).
+ - New `publish.sh` script used to create and publish standalone CloudFormation templates in an S3 bucket - see [README_DEVELOPERS - Publish the solution](./README_DEVELOPERS.md#publish-the-solution).
 
 ## [0.1.0] - 2023-11-27
 ### Added
