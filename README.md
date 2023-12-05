@@ -44,7 +44,7 @@ You also need to have an existing, working Amazon Q application. If you haven't 
 
 We've made this easy by providing pre-built AWS CloudFormation templates that deploy everything you need in your AWS account.
 
-If you are a developer, and you want to build, deploy and/or publish the solution from code, we've made that easy too! See []()
+If you are a developer, and you want to build, deploy and/or publish the solution from code, we've made that easy too! See [Developer README](./README_DEVELOPERS.md)
 
 1. Log into the [AWS console](https://console.aws.amazon.com/) if you are not already.
 2. Choose one of the **Launch Stack** buttons below for your desired AWS region to open the AWS CloudFormation console and create a new stack.
