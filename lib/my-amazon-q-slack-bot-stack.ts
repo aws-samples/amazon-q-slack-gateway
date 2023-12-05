@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
+import { CfnOutput } from 'aws-cdk-lib';
 import { Duration } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
-
 import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Construct } from 'constructs';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
@@ -29,6 +29,9 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       description: STACK_DESCRIPTION
     });
 
+    // Reference the AWS::StackName directly
+    const refStackName = cdk.Fn.ref('AWS::StackName');
+
     const vpc = new Vpc(this, `${props.stackName}-VPC`);
 
     const initialSecretContent = JSON.stringify({
@@ -36,12 +39,17 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       SlackBotUserOAuthToken: '<Replace with Bot User OAuth Token>'
     });
     const slackSecret = new Secret(this, `${props.stackName}-Secret`, {
-      secretName: `${props.stackName}-Secret`,
+      secretName: `${refStackName}-Secret`,
       secretStringValue: cdk.SecretValue.unsafePlainText(initialSecretContent)
+    });
+    // Output URL to the secret in the AWS Management Console
+    new CfnOutput(this, 'SlackSecretConsoleUrl', {
+      value: `https://${this.region}.console.aws.amazon.com/secretsmanager/secret?name=${slackSecret.secretName}&region=${this.region}`,
+      description: 'Click to edit the Slack secrets in the AWS Secrets Manager console'
     });
 
     const dynamoCache = new Table(this, `${props.stackName}-DynamoCache`, {
-      tableName: `${env.StackName}-channels-metadata`,
+      tableName: `${refStackName}-channels-metadata`,
       partitionKey: {
         name: 'channel',
         type: AttributeType.STRING
@@ -51,7 +59,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
     });
 
     const messageMetadata = new Table(this, `${props.stackName}-MessageMetadata`, {
-      tableName: `${env.StackName}-responses-metadata`,
+      tableName: `${refStackName}-responses-metadata`,
       partitionKey: {
         name: 'messageId',
         type: AttributeType.STRING
@@ -64,27 +72,29 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
       {
         handler: 'slack-event-handler',
         id: 'SlackEventHandler',
-        description: 'Lambda function handler for Slack events'
+        description: 'Handler for Slack events'
       },
       {
         handler: 'slack-interaction-handler',
         id: 'SlackInteractionHandler',
-        description: 'Lambda function handler for Slack interactions'
+        description: 'Handler for Slack interactions'
       },
       {
         handler: 'slack-command-handler',
         id: 'SlackCommandHandler',
-        description: 'Lambda function handler for Slack commands'
+        description: 'Handler for Slack commands'
       }
     ].map((p) => {
-      const suffix = `${props.stackName}-${p.id}`;
-      new LambdaRestApi(this, `${suffix}-Api`, {
-        handler: new lambda.NodejsFunction(this, `${suffix}-Fn`, {
+      const prefix = `${props.stackName}-${p.id}`;
+      new LambdaRestApi(this, `${prefix}-Api`, {
+        // Keep dynamic description (with date) to ensure api is deployed on update to new template
+        description: `${p.description}, Revision: ${new Date().toISOString()})`,
+        deploy: true,
+        handler: new lambda.NodejsFunction(this, `${prefix}-Fn`, {
+          functionName: `${refStackName}-${p.id}`,
           entry: `src/functions/${p.handler}.ts`,
           handler: `handler`,
-          description: `${p.description} (Stack: ${
-            props.stackName
-          }, Revision: ${new Date().toISOString()})`,
+          description: `${p.description}, Revision: ${new Date().toISOString()})`,
           timeout: Duration.seconds(30),
           environment: {
             SLACK_SECRET_NAME: slackSecret.secretName,
@@ -96,7 +106,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
             CACHE_TABLE_NAME: dynamoCache.tableName,
             MESSAGE_METADATA_TABLE_NAME: messageMetadata.tableName
           },
-          role: new Role(this, `${suffix}-Role`, {
+          role: new Role(this, `${prefix}-Role`, {
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [
               ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')

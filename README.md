@@ -34,41 +34,46 @@ Follow the instructions below to deploy the project to your own AWS account and 
 
 ## Deploy the solution
 
-### 1. Dependencies
+### Prerequisites
 
-You need to have the following packages installed on your computer to build and deploy the project.
-
-1. bash shell (Linux, MacOS, Windows-WSL)
-2. node and npm: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm 
-3. tsc (typescript): `npm install -g typescript`
-4. esbuild: `npm i -g esbuild`
-5. jq: https://jqlang.github.io/jq/download/
-6. aws (AWS CLI): https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html 
-7. cdk (AWS CDK): https://docs.aws.amazon.com/cdk/v2/guide/cli.html
+You need to have an AWS account and an IAM Role/User with permissions to create and manage the necessary resources and components for this application. *(If you do not have an AWS account, please see [How do I create and activate a new Amazon Web Services account?](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/))*
 
 You also need to have an existing, working Amazon Q application. If you haven't set one up yet, see [Creating an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/business-use-dg/create-app.html)
 
-### 2. Initialize and deploy the stack
+### 1. Deploy the stack
 
-Copy the GitHub repo to your computer. Either:
-- use the git command: git clone https://github.com/aws-samples/amazon-q-slack-gateway.git
-- OR, download and expand the ZIP file from the GitHub page: https://github.com/aws-samples/amazon-q-slack-gateway/archive/refs/heads/main.zip
+We've made this easy by providing pre-built AWS CloudFormation templates that deploy everything you need in your AWS account.
 
-Navigate into the project root directory and, in a bash shell, run:
+If you are a developer, and you want to build, deploy and/or publish the solution from code, we've made that easy too! See [Developer README](./README_DEVELOPERS.md)
 
-1. `./init.sh` - checks your system dependendencies for required packages (see Dependencies above), sets up your environment file, and bootstraps your cdk environment.
-2. `./deploy.sh` - runs the cdk build and deploys or updates a stack in your AWS account, creates a slack app manifest file, and outputs a link to the AWS Secrets Manager secret that you will need below.
+1. Log into the [AWS console](https://console.aws.amazon.com/) if you are not already.
+2. Choose one of the **Launch Stack** buttons below for your desired AWS region to open the AWS CloudFormation console and create a new stack.
+4. Enter the following parameters:
+    1. `Stack Name`: Name your App, e.g. AMAZON-Q-SLACK-GATEWAY.
+    2. `AmazonQAppId`: Your existing Amazon Q Application ID (copy from Amazon Q console). 
+    3. `AmazonQRegion`: Choose the region where you created your Amazon Q Application.
+    4. `AmazonQUserId`: (Optional) Amazon Q User ID email address (leave empty to use Slack users email as user Id)
+    5. `ContextDaysToLive`: Just leave this as the default (90 days)
 
-### 3. Configure your Slack application
+Region | Easy Deploy Button | Template URL - use to upgrade existing stack to a new release
+--- | --- | ---
+N. Virginia (us-east-1) | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.us-east-1.amazonaws.com/aws-ml-blog-us-east-1/artifacts/amazon-q-slack-gateway/AmazonQSlackGateway.json&stackName=AMAZON-Q-SLACK-GATEWAY) | https://s3.us-east-1.amazonaws.com/aws-ml-blog-us-east-1/artifacts/amazon-q-slack-gateway/AmazonQSlackGateway.json
+Oregon (us-west-2) | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/create/review?templateURL=https://s3.us-west-2.amazonaws.com/aws-ml-blog-us-west-2/artifacts/amazon-q-slack-gateway/AmazonQSlackGateway.json&stackName=AMAZON-Q-SLACK-GATEWAY) | https://s3.us-west-2.amazonaws.com/aws-ml-blog-us-west-2/artifacts/amazon-q-slack-gateway/AmazonQSlackGateway.json
 
-#### 3.2 Create your app
+
+When your CloudFormation stack status is CREATE_COMPLETE, choose the **Outputs** tab, and keep it open - you'll need it below.
+
+
+### 2. Configure your Slack application
+
+#### 2.2 Create your app
 
 Now you can create your app in Slack!
 
-1. Create a Slack app: https://api.slack.com/apps from the generated manifest `./slack-manifest-output.json` (copy / paste)
+1. Create a Slack app: https://api.slack.com/apps from the generated manifest - copy / paste from the stack output: `SlackAppManifest`.
 2. Go to `App Home`, scroll down to the section `Show Tabs` and enable `Message Tab` then check the box `Allow users to send Slash commands and messages from the messages tab` - This is a required step to enable your user to send messages to your app
 
-#### 3.3 Add your app in your workspace
+#### 2.3 Add your app in your workspace
 
 Let's now add your app into your workspace, this is required to generate the `Bot User OAuth Token` value that will be needed in the next step
 
@@ -79,7 +84,7 @@ Let's now add your app into your workspace, this is required to generate the `Bo
 4. In the right pane, click on "Open in App Directory"
 5. Click "Open in Slack"
 
-### 4. Configure your Secrets in AWS
+### 3. Configure your Secrets in AWS
 
 Let's configure your Slack secrets in order to (1) verify the signature of each request, (2) post on behalf of your bot
 
@@ -89,16 +94,11 @@ Let's configure your Slack secrets in order to (1) verify the signature of each 
 > Please create an issue (or, better yet, a pull request!) in this repo if you want this feature added to a future version.
 
 1. Login to your AWS console
-2. In your AWS account go to Secret manager, using the URL that was output by the `deploy.sh` script above. 
+2. In your AWS account go to Secret manager, using the URL shown in the stack output: `SlackSecretConsoleUrl`.
 3. Choose `Retrieve secret value`
 4. Choose `Edit`
-5. Replace secret value with the following JSON and replace with the value of `Signing Secret` and `Bot User OAuth Token`, you will find those values in the Slack application configuration under `Basic Information` and `OAuth & Permissions`:
-```
-{
-  "SlackSigningSecret": "VALUE_HERE",
-  "SlackBotUserOAuthToken": "VALUE_HERE"
-}
- ```
+5. Replace the value of `Signing Secret`<sup>\*</sup> and `Bot User OAuth Token`, you will find those values in the Slack application configuration under `Basic Information` and `OAuth & Permissions`. <sup>\*</sup>*(Pro tip: Be careful you don't accidentally copy 'Client Secret' (wrong) instead of 'Signing Secret' (right)!)*
+
 
 ### Say hello
 > Time to say Hi!

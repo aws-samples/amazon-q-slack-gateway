@@ -27,6 +27,7 @@ CDK_OUT_CONTENT=$(<"$CDK_OUT_FILE")
 SLACK_EVENT_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackEventHandlerApiEndpoint")) | .value')
 SLACK_INTERACTION_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackInteractionHandlerApiEndpoint")) | .value')
 SLACK_COMMAND_HANDLER_API_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackCommandHandlerApiEndpoint")) | .value')
+SLACK_SECRET_URL_OUTPUT=$(echo "$CDK_OUT_CONTENT" | jq -r '.[] | to_entries[] | select(.key | contains("SlackSecretConsoleUrl")) | .value')
 
 # Use sed to replace the tokens with the extracted values in the template file and write to the new file
 if sed --version 2>/dev/null | grep -q GNU; then # GNU sed
@@ -45,6 +46,5 @@ fi
 echo "Slack app manifest created: $OUTPUT_FILE."
 
 # Output URL to Secrets Manager
-AWS_REGION=${AWS_REGION:-$(aws configure get region)}
-echo URL for your slack bot secrets: https://$AWS_REGION.console.aws.amazon.com/secretsmanager/secret\?name\=${STACKNAME}-Secret\&region\=$AWS_REGION
+echo URL for your slack bot secrets: $SLACK_SECRET_URL_OUTPUT
 
