@@ -97,7 +97,7 @@ Let's configure your Slack secrets in order to (1) verify the signature of each 
 2. In your AWS account go to Secret manager, using the URL shown in the stack output: `SlackSecretConsoleUrl`.
 3. Choose `Retrieve secret value`
 4. Choose `Edit`
-5. Replace the value of `Signing Secret` and `Bot User OAuth Token`, you will find those values in the Slack application configuration under `Basic Information` and `OAuth & Permissions`:
+5. Replace the value of `Signing Secret`<sup>\*</sup> and `Bot User OAuth Token`, you will find those values in the Slack application configuration under `Basic Information` and `OAuth & Permissions`. <sup>\*</sup>*(Pro tip: Be careful you don't accidentally copy 'Client Secret' (wrong) instead of 'Signing Secret' (right)!)*
 
 
 ### Say hello
