@@ -2,7 +2,7 @@
 
 The main README is here: [Slack gateway for Amazon Q, your business expert (preview)](./README.md)
 
-This README describes how to build the project from the source code - for developer types. You can:
+This Developer README describes how to build the project from the source code - for developer types. You can:
 - [Deploy the solution](#deploy-the-solution)
 - [Publish the solution](#publish-the-solution)
 
@@ -82,24 +82,25 @@ Let's configure your Slack secrets in order to (1) verify the signature of each 
 
 In our main README, you will see that we provided Easy Deploy Buttons to launch a stack using pre-built templates that we published already to an S3 bucket. 
 
-If you want to build and deploy your own template, to your own S3 bucket, so that others can easily deploy a stack using your templates, here's how.
+If you want to build and publish your own template, to your own S3 bucket, so that others can easily use a similar easy button approach to deploy a stack, using *your* templates, here's how.
 
 Navigate into the project root directory and, in a bash shell, run:
 
-1. `./publish.sh <cfn_bucket_basename> <cfn_prefix> <us-east-1 | us-west-2>` - this:
-  - checks your system dependendencies for required packages (see Dependencies above)
-  - bootstraps your cdk environment if needed
-  - creates a standalone CloudFormation template (that doesn't depend on CDK)
-  - publishes the template and required assets to an S3 bucket in your account called `cfn_bucket_basename-region` (it creates the bucket if it doesn't already exist)
-  - optionally add a final parameter `public` if you want to make the templates public. Note: your bucket and account must be configured not to Block Public Access using new ACLs.
+1. `./publish.sh <cfn_bucket_basename> <cfn_prefix> <us-east-1 | us-west-2>`.  
+  This:
+    - checks your system dependendencies for required packages (see Dependencies above)
+    - bootstraps your cdk environment if needed
+    - creates a standalone CloudFormation template (that doesn't depend on CDK)
+    - publishes the template and required assets to an S3 bucket in your account called `cfn_bucket_basename-region` (it creates the bucket if it doesn't already exist)
+    - optionally add a final parameter `public` if you want to make the templates public. Note: your bucket and account must be configured not to Block Public Access using new ACLs.
 
-That's it! Just one step.
+That's it! There's just one step.
   
 When completed, it displays the CloudFormation templates S3 URLs and 1-click URLs for launching the stack creation in CloudFormation console, e.g.:
 ```
 OUTPUTS
-Template URL: https://s3.us-east-1.amazonaws.com/yourbucket-us-east-1/qslack-test/AmazonQSlackGateway.json
-CF Launch URL: https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.us-east-1.amazonaws.com/yourbucket-us-east-1/qslack-test/AmazonQSlackGateway.json&stackName=AMAZON-Q-SLACK-GATEWAY
+Template URL: https://s3.us-east-1.amazonaws.com/yourbucketbasename-us-east-1/qslack-test/AmazonQSlackGateway.json
+CF Launch URL: https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.us-east-1.amazonaws.com/yourbucketbasename-us-east-1/qslack-test/AmazonQSlackGateway.json&stackName=AMAZON-Q-SLACK-GATEWAY
 Done
 ``````
 
