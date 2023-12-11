@@ -1,10 +1,10 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { createButton, getMarkdownBlocks, SLACK_ACTION } from '@helpers/slack/slack-helpers';
-import { AmazonQResponse } from '@helpers/amazon-q/amazon-q-client';
 import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
-import { ChatDependencies, Attachment } from '@src/helpers/chat';
+import { ChatDependencies } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
+import { ChatSyncCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
 
 const logger = makeLogger('amazon-q-helpers');
 
@@ -14,14 +14,14 @@ const WARN_TRUNCATED = `| Please note that you do not have all the conversation 
 
 export const chat = async (
   incomingMessage: string,
-  attachments: Attachment[],
+  attachments: AttachmentInput[],
   dependencies: ChatDependencies,
   env: SlackEventsEnv,
   context?: {
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<AmazonQResponse | Error> => {
+): Promise<ChatSyncCommandOutput | Error> => {
   try {
     // Enforce max input message limit - may cause undesired side effects
     // TODO consider 'smarter' truncating of number of chat history messages, etc. rather
@@ -46,7 +46,7 @@ export const chat = async (
   }
 };
 
-export const getResponseAsBlocks = (response: AmazonQResponse) => {
+export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
   if (isEmpty(response.systemMessage)) {
     return [];
   }
@@ -60,12 +60,12 @@ export const getResponseAsBlocks = (response: AmazonQResponse) => {
           `${convertHN(getTablePrefix(content))}\n\n${parseTable(getTable(content))}`
         )),
     ...(!isEmpty(response.sourceAttributions)
-      ? [createButton('View source(s)', response.systemMessageId)]
+      ? [createButton('View source(s)', response.systemMessageId ?? '')]
       : [])
   ];
 };
 
-export const getFeedbackBlocks = (response: AmazonQResponse): Block[] => [
+export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
   {
     type: 'actions',
     block_id: `feedback-${response.conversationId}-${response.systemMessageId}`,

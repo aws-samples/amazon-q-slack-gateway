@@ -9,7 +9,6 @@ export interface StackEnvironment {
   AmazonQAppId: string;
   AmazonQUserId: string;
   AmazonQRegion: string;
-  AmazonQEndpoint?: string;
   ContextDaysToLive: string;
 }
 
