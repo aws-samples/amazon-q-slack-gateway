@@ -9,7 +9,6 @@ const logger = makeLogger('slack-command-handler');
 const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
   REGION: getOrThrowIfEmpty(env.AWS_REGION ?? env.AWS_DEFAULT_REGION),
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
-  AMAZON_Q_ENDPOINT: env.AMAZON_Q_ENDPOINT,
   AMAZON_Q_APP_ID: getOrThrowIfEmpty(env.AMAZON_Q_APP_ID),
   AMAZON_Q_USER_ID: env.AMAZON_Q_USER_ID,
   AMAZON_Q_REGION: getOrThrowIfEmpty(env.AMAZON_Q_REGION),

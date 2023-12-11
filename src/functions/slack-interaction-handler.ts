@@ -9,14 +9,13 @@ import {
 import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
 import { chatDependencies, getMessageMetadata } from '@helpers/chat';
-import { AmazonQResponse } from '@helpers/amazon-q/amazon-q-client';
+import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
 
 const logger = makeLogger('slack-interactions-handler');
 
 const processSlackInteractionsEnv = (env: NodeJS.ProcessEnv) => ({
   REGION: getOrThrowIfEmpty(env.AWS_REGION ?? env.AWS_DEFAULT_REGION),
   SLACK_SECRET_NAME: getOrThrowIfEmpty(env.SLACK_SECRET_NAME),
-  AMAZON_Q_ENDPOINT: env.AMAZON_Q_ENDPOINT,
   AMAZON_Q_APP_ID: getOrThrowIfEmpty(env.AMAZON_Q_APP_ID),
   AMAZON_Q_USER_ID: env.AMAZON_Q_USER_ID,
   AMAZON_Q_REGION: getOrThrowIfEmpty(env.AMAZON_Q_REGION),
@@ -98,7 +97,7 @@ export const handler = async (
       action.value,
       dependencies,
       slackInteractionsEnv
-    )) as AmazonQResponse;
+    )) as ChatSyncCommandOutput;
     if (
       id === SLACK_ACTION[SLACK_ACTION.VIEW_SOURCES] &&
       !isEmpty(messageMetadata?.sourceAttributions)
@@ -128,8 +127,8 @@ export const handler = async (
       await dependencies.submitFeedbackRequest(
         slackInteractionsEnv,
         {
-          conversationId: messageMetadata.conversationId,
-          messageId: messageMetadata.systemMessageId
+          conversationId: messageMetadata.conversationId ?? '',
+          messageId: messageMetadata.systemMessageId ?? ''
         },
         id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ? 'USEFUL' : 'NOT_USEFUL',
         id === SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP] ? 'HELPFUL' : 'NOT_HELPFUL',
