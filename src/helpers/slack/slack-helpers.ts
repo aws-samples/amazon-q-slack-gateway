@@ -5,8 +5,8 @@ import { Block, ChatPostMessageResponse, ModalView, WebClient } from '@slack/web
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
 import { makeLogger } from '@src/logging';
-import { SourceAttribution } from '@helpers/amazon-q/amazon-q-client';
 import { isEmpty } from '@src/utils';
+import { SourceAttributions } from 'aws-sdk/clients/qbusiness';
 
 const logger = makeLogger('slack-helpers');
 
@@ -104,7 +104,7 @@ export const sendSlackMessage = async (
 export const updateSlackMessage = async (
   env: SlackInteractionsEnv | SlackEventsEnv,
   postMessageResponse: ChatPostMessageResponse,
-  text: string,
+  text: string | undefined,
   blocks?: Block[]
 ) => {
   if (isEmpty(postMessageResponse.channel) || isEmpty(postMessageResponse.ts)) {
@@ -189,7 +189,7 @@ export const createButton = (text: string, systemMessageId: string) => ({
   ]
 });
 
-export const createModal = (title: string, sources: SourceAttribution[]): ModalView => {
+export const createModal = (title: string, sources: SourceAttributions): ModalView => {
   const blocks = [];
   for (let i = 0; i < sources.length; i++) {
     const source = sources[i];

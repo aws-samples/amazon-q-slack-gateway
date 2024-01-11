@@ -55,7 +55,6 @@ stack_name=$(prompt_for_value "StackName" "Name for slack bot" "AmazonQBot" "^[A
 user_id=$(prompt_for_value "AmazonQUserId" "Amazon Q User ID (leave empty to use slack users' email as user Id)" "" "^[^[:space:]]{0,255}$")
 app_id=$(prompt_for_value "AmazonQAppId" "Amazon Q Application ID (copy from AWS console)" "none" "^[a-zA-Z0-9][a-zA-Z0-9-]{35}$")
 region=$(prompt_for_value "AmazonQRegion" "Amazon Q Region" $(aws configure get region) "^[a-z]{2}-[a-z]+-[0-9]+$")
-endpoint=$(prompt_for_value "AmazonQEndpoint" "Amazon Q Endpoint (leave empty for default endpoint)" "" "https://[-[:alnum:]\+&@#/%?=~_|!:,.;]+")
 ttl_days=$(prompt_for_value "ContextDaysToLive" "Number of days to keep conversation context" "90" "^[1-9][0-9]{0,3}$")
 
 # Create or update the JSON file
@@ -72,7 +71,6 @@ jq -n \
     AmazonQAppId: $app_id,
     AmazonQUserId: $user_id,
     AmazonQRegion: $region,
-    AmazonQEndpoint: $endpoint,
     ContextDaysToLive: $ttl_days
   }' > "$json_file"
 

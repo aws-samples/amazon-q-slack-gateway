@@ -2,6 +2,7 @@ import { handler } from '@functions/slack-event-handler';
 import amazonQValidResponse2TextSimple from '@tst/mocks/amazon-q/valid-response-2.json';
 import { MOCK_AWS_RESPONSE, MOCK_DEPENDENCIES, MOCK_ENV } from '@tst/mocks/mocks';
 import { Callback, Context } from 'aws-lambda';
+import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
 
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 
@@ -199,7 +200,7 @@ describe('Slack event handler test', () => {
       {} as Callback,
       {
         ...MOCK_DEPENDENCIES,
-        callClient: () => Promise.resolve(amazonQValidResponse2TextSimple),
+        callClient: () => Promise.resolve(amazonQValidResponse2TextSimple as ChatSyncCommandOutput),
         getItem: async () =>
           Promise.resolve({
             Item: {
@@ -386,7 +387,8 @@ describe('Slack event handler test', () => {
         conversationId: '80a6642c-8b3d-433e-a9cb-233b42a0d63a',
         sourceAttributions: [],
         systemMessageId: 'e5a23752-3f31-4fee-83fe-56fbd7803540',
-        userMessageId: '616fefbc-48bc-442d-a618-497bbbde3d66'
+        userMessageId: '616fefbc-48bc-442d-a618-497bbbde3d66',
+        $metadata: {}
       },
       blocks: [
         {
