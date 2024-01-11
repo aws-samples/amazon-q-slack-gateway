@@ -10,6 +10,7 @@ import {
   hasTable,
   parseTable
 } from '@helpers/amazon-q/amazon-q-helpers';
+import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
 
 describe('AmazonQ helpers test', () => {
   test('Should get a response as block with context', async () => {
@@ -18,7 +19,7 @@ describe('AmazonQ helpers test', () => {
   });
 
   test('Test response markdown conversion', async () => {
-    const response = getResponseAsBlocks(amazonQValidResponse1);
+    const response = getResponseAsBlocks(amazonQValidResponse1 as ChatSyncCommandOutput);
     expect(response).toEqual([
       {
         text: {
