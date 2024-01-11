@@ -186,6 +186,8 @@ function updateTemplateLambdaRolePermissions(template, lambdas) {
 }
 
 function parameterizeTemplate(template, lambdas) {
+  const allowedQRegions = ['us-east-1', 'us-west-2'];
+  const defaultQRegion = allowedQRegions.includes(awsRegion) ? awsRegion : allowedQRegions[0];
   template.Parameters = {
     AmazonQUserId: {
       Type: 'String',
@@ -201,8 +203,8 @@ function parameterizeTemplate(template, lambdas) {
     },
     AmazonQRegion: {
       Type: 'String',
-      Default: 'us-east-1',
-      AllowedValues: ['us-east-1', 'us-west-2'],
+      Default: defaultQRegion,
+      AllowedValues: allowedQRegions,
       Description: 'Amazon Q Region'
     },
     ContextDaysToLive: {
