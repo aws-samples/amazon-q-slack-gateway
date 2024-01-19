@@ -70,7 +70,8 @@ When your CloudFormation stack status is CREATE_COMPLETE, choose the **Outputs**
 
 #### 2.2 Create your app
 
-Now you can create your app in Slack! You are required to create a new Slack app for the Slack Gateway for Amazon Q. If you are also using the Slack data source connector for Amazon Q, and have configured a Slack app for that, please do not modify that Slack app.
+Now you can create your new app in Slack!  
+*NOTE: If you have deployed the Slack data source connector for Amazon Q you may already have an existing Slack app installed. Do not attempt to modify that data source connector app - create a new app instead.*
 
 1. Create a Slack app: https://api.slack.com/apps from the generated manifest - copy / paste from the stack output: `SlackAppManifest`.
 2. Go to `App Home`, scroll down to the section `Show Tabs` and enable `Message Tab` then check the box `Allow users to send Slash commands and messages from the messages tab` - This is a required step to enable your user to send messages to your app
