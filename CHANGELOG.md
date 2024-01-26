@@ -6,14 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.3] - 2023-01-26
+## [0.1.3] - 2024-01-26
 ### Fixed
   - Merged #25 - adds flexibility to accomodate multiple slack applications with unique variations of the 
   `/new_conversation` slash command.  The command may be now customized to have any name starting with `/new_conv` - 
   e.g. `/new_conv_appa`, `/new_conv_appb`, etc.
 
 
-## [0.1.2] - 2023-01-11
+## [0.1.2] - 2024-01-11
 ### Fixed
  - Prebuild CloudFormation template region parameter default now matches template region for us-west-2
  - Merged #21 - Remove SDK JSON model injection in favor of @aws-sdk/client-qbusiness
