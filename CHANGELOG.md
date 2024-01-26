@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2023-01-26
+### Fixed
+  - Merged #25 - adds flexibility to accomodate multiple slack applications with unique variations of the 
+  `/new_conversation` slash command.  The command may be now customized to have any name starting with `/new_conv` - 
+  e.g. `/new_conv_appa`, `/new_conv_appb`, etc.
+
+
 ## [0.1.2] - 2023-01-11
 ### Fixed
  - Prebuild CloudFormation template region parameter default now matches template region for us-west-2
@@ -30,7 +37,8 @@ Initial release
 - Process up to 5 attached files for document question answering, summaries, etc.
 - Reset and start new conversation in DM channel by using `/new_conversation`
 
-[Unreleased]: https://github.com/aws-samples/qnabot-on-aws-plugin-samples/compare/v0.1.2...develop
+[Unreleased]: https://github.com/aws-samples/qnabot-on-aws-plugin-samples/compare/v0.1.3...develop
+[0.1.3]: https://github.com/aws-samples/qnabot-on-aws-plugin-samples/releases/tag/v0.1.3
 [0.1.2]: https://github.com/aws-samples/qnabot-on-aws-plugin-samples/releases/tag/v0.1.2
 [0.1.1]: https://github.com/aws-samples/qnabot-on-aws-plugin-samples/releases/tag/v0.1.1
 [0.1.0]: https://github.com/aws-samples/qnabot-on-aws-plugin-samples/releases/tag/v0.1.0
