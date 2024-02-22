@@ -82,7 +82,7 @@ Let's now add your app into your workspace, this is required to generate the `Bo
 
 1. Go to OAuth & Permissions (in api.slack.com) and click `Install to Workspace`, this will generate the OAuth token
 2. In Slack, go to your workspace
-2. Click on your workspace name > Settings & administration > Manage apps
+2. Click on your workspace name > Tools and settings > Manage apps
 3. Click on your newly created app
 4. In the right pane, click on "Open in App Directory"
 5. Click "Open in Slack"
