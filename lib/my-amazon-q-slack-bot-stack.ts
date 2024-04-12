@@ -54,6 +54,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         name: 'channel',
         type: AttributeType.STRING
       },
+      pointInTimeRecovery: true,
       timeToLiveAttribute: 'expireAt',
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
@@ -64,6 +65,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         name: 'messageId',
         type: AttributeType.STRING
       },
+      pointInTimeRecovery: true,
       timeToLiveAttribute: 'expireAt',
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
