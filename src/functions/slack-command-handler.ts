@@ -79,7 +79,7 @@ export const handler = async (
   }
 
   let commandStatus;
-  if (body.command.startsWith('/new_conv')) { 
+  if (body.command.startsWith('/new_conv')) {
     const channelKey = getChannelKey('message', body.team_id, body.channel_id, 'n/a');
     logger.debug(`Slash command: ${body.command} - deleting channel metadata for '${channelKey}'`);
     await deleteChannelMetadata(channelKey, dependencies, slackEventsEnv);
