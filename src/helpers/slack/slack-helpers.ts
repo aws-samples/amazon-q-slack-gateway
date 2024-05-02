@@ -169,7 +169,8 @@ export const getMarkdownBlocks = (content: string, imageUrl?: string): Block[] =
 export enum SLACK_ACTION {
   VIEW_SOURCES,
   FEEDBACK_DOWN,
-  FEEDBACK_UP
+  FEEDBACK_UP,
+  SIGN_IN
 }
 
 export const createButton = (text: string, systemMessageId: string) => ({
@@ -213,7 +214,7 @@ export const createModal = (title: string, sources: SourceAttributions): ModalVi
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `_From: ${source.url.trim()}_`
+          text: `_From:_ ${source.url.trim()}`
         }
       });
 

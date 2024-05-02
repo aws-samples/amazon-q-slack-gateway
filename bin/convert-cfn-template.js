@@ -189,13 +189,6 @@ function parameterizeTemplate(template, lambdas) {
   const allowedQRegions = ['us-east-1', 'us-west-2'];
   const defaultQRegion = allowedQRegions.includes(awsRegion) ? awsRegion : allowedQRegions[0];
   template.Parameters = {
-    AmazonQUserId: {
-      Type: 'String',
-      Default: '',
-      AllowedPattern: '(|^[\\w.+-]+@([\\w-]+\\.)+[\\w-]{2,6}$)',
-      Description:
-        '(Optional) Amazon Q User ID email address (leave empty to use Slack users email as user Id)'
-    },
     AmazonQAppId: {
       Type: 'String',
       AllowedPattern: '^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$',
@@ -212,16 +205,42 @@ function parameterizeTemplate(template, lambdas) {
       Default: 90,
       MinValue: 1,
       Description: 'Number of days to keep conversation context'
+    },
+    OIDCIdPName: {
+      Type: 'String',
+      Default: 'Okta',
+      AllowedPattern: '^[a-zA-Z]{1,255}$',
+      Description: 'Name of Identity Provider (Okta, Cognito, Other)'
+    },
+    OIDCClientId: {
+      Type: 'String',
+      AllowedPattern: '^[a-zA-Z0-9]{1,255}$',
+      Description: 'OIDC Client ID'
+    },
+    OIDCIssuerURL: {
+      Type: 'String',
+      AllowedPattern: '^https://[a-zA-Z0-9.-]+(:[0-9]+)?(/.*)?$',
+      Description: 'OIDC Issuer URL'
+    },
+    GatewayIdCAppARN: {
+      Type: 'String',
+      AllowedPattern: '^arn:aws[a-zA-Z-]*:[a-zA-Z0-9-]*:[a-z0-9-]*:[0-9]{12}:[a-zA-Z0-9:/._-]+$',
+      Description: 'Q Business Slack Gateway IdC App Arn'
     }
   };
   for (let lambda of lambdas) {
     let lambdaResource = template.Resources[lambda.resourceName];
     lambdaResource.Properties.Environment.Variables.AMAZON_Q_ENDPOINT = ''; // use default endpoint
-    lambdaResource.Properties.Environment.Variables.AMAZON_Q_USER_ID = { Ref: 'AmazonQUserId' };
     lambdaResource.Properties.Environment.Variables.AMAZON_Q_APP_ID = { Ref: 'AmazonQAppId' };
     lambdaResource.Properties.Environment.Variables.AMAZON_Q_REGION = { Ref: 'AmazonQRegion' };
     lambdaResource.Properties.Environment.Variables.CONTEXT_DAYS_TO_LIVE = {
       Ref: 'ContextDaysToLive'
+    };
+    lambdaResource.Properties.Environment.Variables.OIDC_IDP_NAME = { Ref: 'OIDCIdPName' };
+    lambdaResource.Properties.Environment.Variables.OIDC_CLIENT_ID = { Ref: 'OIDCClientId' };
+    lambdaResource.Properties.Environment.Variables.OIDC_ISSUER_URL = { Ref: 'OIDCIssuerURL' };
+    lambdaResource.Properties.Environment.Variables.GATEWAY_IDC_APP_ARN = {
+      Ref: 'GatewayIdCAppARN'
     };
   }
 }

@@ -5,6 +5,8 @@ import { isEmpty } from '@src/utils';
 import { ChatDependencies } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
 import { ChatSyncCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
+import { Credentials } from 'aws-sdk';
+import { ExpiredTokenException } from '@aws-sdk/client-sts';
 
 const logger = makeLogger('amazon-q-helpers');
 
@@ -17,6 +19,7 @@ export const chat = async (
   attachments: AttachmentInput[],
   dependencies: ChatDependencies,
   env: SlackEventsEnv,
+  iamSessionCreds: Credentials,
   context?: {
     conversationId: string;
     parentMessageId: string;
@@ -33,12 +36,22 @@ export const chat = async (
           ) + WARN_TRUNCATED
         : incomingMessage;
 
-    const response = await dependencies.callClient(inputMessage, attachments, env, context);
+    const response = await dependencies.callClient(
+      inputMessage,
+      attachments,
+      env,
+      iamSessionCreds,
+      context
+    );
     logger.debug(`AmazonQ chatSync response: ${JSON.stringify(response)}`);
     return response;
   } catch (error) {
     logger.error(`Caught Exception: ${JSON.stringify(error)}`);
     if (error instanceof Error) {
+      logger.debug(error.stack);
+      if (error instanceof ExpiredTokenException) {
+        logger.error(`Token expired: ${error.message}`);
+      }
       return new Error(error.message);
     } else {
       return new Error(`${JSON.stringify(error)}`);
@@ -96,6 +109,25 @@ export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
   } as Block
 ];
 
+export const getSignInBlocks = (authorizationURL: string): Block[] => [
+  {
+    type: 'actions',
+    block_id: `sign-in`,
+    elements: [
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          emoji: true,
+          text: 'Sign in to Amazon Q'
+        },
+        style: 'primary',
+        action_id: SLACK_ACTION[SLACK_ACTION.SIGN_IN],
+        url: authorizationURL
+      }
+    ]
+  } as Block
+];
 /**
  * I am not very happy about the following lines, but it is being covered by unit testing
  * I did not find any libraries that would parse a Markdown table to a slack block kit

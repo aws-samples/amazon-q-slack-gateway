@@ -4,6 +4,8 @@
 # helper script called by $ROOT/init.sh - interactively create environment.json
 #
 
+echo "This script will interactively create or update environment.json"
+
 json_file="environment.json"
 
 prompt_for_value() {
@@ -40,7 +42,7 @@ prompt_for_value() {
     elif [[ $value =~ $regex ]]; then
       # value matches the regex - all good.
       break
-    else 
+    else
       # value does not match the regex.. ask user to try again
       echo "Value entered does not match required regex: $regex. Please enter a valid value." >&2
     fi
@@ -52,10 +54,13 @@ prompt_for_value() {
 # Read or update values
 stack_name=$(prompt_for_value "StackName" "Name for slack bot" "AmazonQBot" "^[A-Za-z][A-Za-z0-9-]{0,127}$")
 # From Bash 3 - testing with MacOS - m and n must be in the range from 0 to RE_DUP_MAX (default 255), inclusive.
-user_id=$(prompt_for_value "AmazonQUserId" "Amazon Q User ID (leave empty to use slack users' email as user Id)" "" "^[^[:space:]]{0,255}$")
 app_id=$(prompt_for_value "AmazonQAppId" "Amazon Q Application ID (copy from AWS console)" "none" "^[a-zA-Z0-9][a-zA-Z0-9-]{35}$")
 region=$(prompt_for_value "AmazonQRegion" "Amazon Q Region" $(aws configure get region) "^[a-z]{2}-[a-z]+-[0-9]+$")
 ttl_days=$(prompt_for_value "ContextDaysToLive" "Number of days to keep conversation context" "90" "^[1-9][0-9]{0,3}$")
+oidc_idp_name=$(prompt_for_value "OIDCIdPName" "Name of Identity Provider (Okta, Cognito, Other)" "Okta" "^[a-zA-Z]{1,255}$")
+oidc_client_id=$(prompt_for_value "OIDCClientId" "OIDC Client ID" "none" "^[a-zA-Z0-9]{1,255}$")
+oidc_issuer_url=$(prompt_for_value "OIDCIssuerURL" "OIDC Issuer URL" "none" "^https://[a-zA-Z0-9.-]+(:[0-9]+)?(/.*)?$")
+gateway_idc_app_arn=$(prompt_for_value "GatewayIdCAppARN" "Q Gateway IdC App Arn" "none" "^arn:aws[a-zA-Z-]*:[a-zA-Z0-9-]*:[a-z0-9-]*:[0-9]{12}:[a-zA-Z0-9:/._-]+$")
 
 # Create or update the JSON file
 cp $json_file $json_file.bak 2> /dev/null
@@ -63,15 +68,21 @@ jq -n \
   --arg stack_name "$stack_name" \
   --arg app_id "$app_id" \
   --arg region "$region" \
-  --arg user_id "$user_id" \
   --arg endpoint "$endpoint" \
   --arg ttl_days "$ttl_days" \
+  --arg oidc_idp_name "$oidc_idp_name" \
+  --arg oidc_client_id "$oidc_client_id" \
+  --arg oidc_issuer_url "$oidc_issuer_url" \
+  --arg gateway_idc_app_arn "$gateway_idc_app_arn" \
   '{
     StackName: $stack_name,
     AmazonQAppId: $app_id,
-    AmazonQUserId: $user_id,
     AmazonQRegion: $region,
-    ContextDaysToLive: $ttl_days
+    ContextDaysToLive: $ttl_days,
+    OIDCIdPName: $oidc_idp_name,
+    OIDCClientId: $oidc_client_id,
+    OIDCIssuerURL: $oidc_issuer_url,
+    GatewayIdCAppARN: $gateway_idc_app_arn
   }' > "$json_file"
 
 echo "Configuration saved to $json_file"

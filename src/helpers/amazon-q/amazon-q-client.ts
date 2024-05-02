@@ -13,15 +13,17 @@ import {
   ChatSyncCommandOutput,
   AttachmentInput
 } from '@aws-sdk/client-qbusiness';
+import { Credentials } from 'aws-sdk';
 
 const logger = makeLogger('amazon-q-client');
 
 let amazonQClient: QBusinessClient | null = null;
 
-export const getClient = (env: SlackEventsEnv) => {
+export const getClient = (env: SlackEventsEnv, iamSessionCreds: Credentials) => {
   if (amazonQClient === null) {
     logger.debug(`Initiating AmazonQ client with region ${env.AMAZON_Q_REGION}`);
     amazonQClient = new QBusinessClient({
+      credentials: iamSessionCreds,
       region: env.AMAZON_Q_REGION
     });
   }
@@ -33,6 +35,7 @@ export const callClient = async (
   message: string,
   attachments: AttachmentInput[],
   env: SlackEventsEnv,
+  iamSessionCreds: Credentials,
   context?: {
     conversationId: string;
     parentMessageId: string;
@@ -40,7 +43,6 @@ export const callClient = async (
 ): Promise<ChatSyncCommandOutput> => {
   const input = {
     applicationId: env.AMAZON_Q_APP_ID,
-    userId: env.AMAZON_Q_USER_ID,
     clientToken: uuid(),
     userMessage: message,
     ...(attachments.length > 0 && { attachments }),
@@ -48,11 +50,12 @@ export const callClient = async (
   };
 
   logger.debug(`callClient input ${JSON.stringify(input)}`);
-  return await getClient(env).send(new ChatSyncCommand(input));
+  return await getClient(env, iamSessionCreds).send(new ChatSyncCommand(input));
 };
 
 export const submitFeedbackRequest = async (
   env: SlackInteractionsEnv,
+  iamSessionCreds: Credentials,
   context: {
     conversationId: string;
     messageId: string;
@@ -63,7 +66,6 @@ export const submitFeedbackRequest = async (
 ): Promise<PutFeedbackCommandOutput> => {
   const input: PutFeedbackCommandInput = {
     applicationId: env.AMAZON_Q_APP_ID,
-    userId: env.AMAZON_Q_USER_ID,
     ...context,
     messageUsefulness: {
       usefulness: usefulness,
@@ -74,7 +76,7 @@ export const submitFeedbackRequest = async (
   };
 
   logger.debug(`putFeedbackRequest input ${JSON.stringify(input)}`);
-  const response = await getClient(env).send(new PutFeedbackCommand(input));
+  const response = await getClient(env, iamSessionCreds).send(new PutFeedbackCommand(input));
   logger.debug(`putFeedbackRequest output ${JSON.stringify(response)}`);
 
   return response;

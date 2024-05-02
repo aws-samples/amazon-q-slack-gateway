@@ -1,6 +1,6 @@
 import amazonQValidResponse1 from '@tst/mocks/amazon-q/valid-response-1.json';
 import amazonQValidResponse2 from '@tst/mocks/amazon-q/valid-response-2.json';
-import { MOCK_DEPENDENCIES, MOCK_ENV } from '@tst/mocks/mocks';
+import { MOCK_DEPENDENCIES, MOCK_ENV, MOCK_IAM_SESSION_CREDS } from '@tst/mocks/mocks';
 
 import {
   chat,
@@ -14,7 +14,7 @@ import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
 
 describe('AmazonQ helpers test', () => {
   test('Should get a response as block with context', async () => {
-    const response = await chat('message', [], MOCK_DEPENDENCIES, MOCK_ENV);
+    const response = await chat('message', [], MOCK_DEPENDENCIES, MOCK_ENV, MOCK_IAM_SESSION_CREDS);
     expect(response).toEqual(amazonQValidResponse1);
   });
 

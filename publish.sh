@@ -35,6 +35,7 @@ fi
 VERSION=$(jq -r '.version' package.json)
 [[ "${PREFIX}" == */ ]] && PREFIX="${PREFIX%?}"
 PREFIX_AND_VERSION=${PREFIX}/${VERSION}
+echo $PREFIX_AND_VERSION
 
 # Append region to bucket basename
 BUCKET=${BUCKET_BASENAME}-${REGION}
@@ -57,10 +58,13 @@ cat > /tmp/environment.json << _EOF
 {
   "StackName": "AQSG",
   "AmazonQAppId": "QAPPID",
-  "AmazonQUserId": "QUSERID",
   "AmazonQRegion": "QREGION",
   "AmazonQEndpoint": "QENDPOINT",
-  "ContextDaysToLive": "QCONTEXTTTL"
+  "ContextDaysToLive": "QCONTEXTTTL",
+  "OIDCIdPName": "QOIDCIDPNAME",
+  "OIDCClientId": "QOIDCCLIENTID",
+  "OIDCIssuerURL": "QOIDCISSUERURL",
+  "GatewayIdCAppARN": "QGATEWAYIDCAPPARN"
 }
 _EOF
 
@@ -68,7 +72,7 @@ echo "Running npm install and build..."
 npm install && npm run build
 
 echo "Running cdk bootstrap..."
-cdk bootstrap -c environment=./environment.json
+cdk bootstrap -c environment=$envfile
 
 echo "Running cdk synthesize to create artifacts and template"
 cdk synthesize --staging  -c environment=$envfile > /dev/null
@@ -90,9 +94,9 @@ if $PUBLIC; then
   files=$(aws s3api list-objects --bucket ${BUCKET} --prefix ${PREFIX_AND_VERSION} --query "(Contents)[].[Key]" --output text)
   for file in $files
     do
-    aws s3api put-object-acl --acl public-read --bucket ${BUCKET} --key $file
+    aws s3api put-object-acl --acl public-read --bucket ${BUCKET} --key $file --region us-east-1
     done
-  aws s3api put-object-acl --acl public-read --bucket ${BUCKET} --key ${PREFIX}/${MAIN_TEMPLATE}
+  aws s3api put-object-acl --acl public-read --bucket ${BUCKET} --key ${PREFIX}/${MAIN_TEMPLATE} --region us-east-1
 fi
 
 echo "OUTPUTS"

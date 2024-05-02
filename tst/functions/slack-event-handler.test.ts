@@ -126,7 +126,8 @@ describe('Slack event handler test', () => {
             type: 'message',
             channel: 'channel',
             client_msg_id: 'client_msg_id',
-            text: 'text'
+            text: 'text',
+            user: 'user'
           }
         })
       },
@@ -154,7 +155,8 @@ describe('Slack event handler test', () => {
             type: 'message',
             channel: 'channel',
             client_msg_id: 'client_msg_id',
-            text: 'text'
+            text: 'text',
+            user: 'user'
           }
         })
       },
@@ -192,7 +194,8 @@ describe('Slack event handler test', () => {
             type: 'message',
             channel: 'channel',
             client_msg_id: 'client_msg_id',
-            text: 'text'
+            text: 'text',
+            user: 'user'
           }
         })
       },
@@ -267,7 +270,8 @@ describe('Slack event handler test', () => {
             type: 'message',
             channel: 'channel',
             client_msg_id: 'client_msg_id',
-            text: 'text'
+            text: 'text',
+            user: 'user'
           }
         })
       },
