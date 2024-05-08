@@ -1,6 +1,6 @@
 # Slack gateway for for Amazon Q Business
 
-| :zap:        Please note | If you have created a new Amazon Q Business application on or after April 30th, 2024, you will not be able to set up a Slack or Microsoft Teams gateway using the instructions provided below. This is because new Amazon Q Business applications require integration with IAM Identity Center. We are currently working on updating the CloudFormation (CFN) template and the necessary steps to accommodate the setup of these gateways for new applications created since April 30th, 2024 with an expected completion date by May 30th, 2024.   |
+| :zap:        If you have created a new Amazon Q Business application on or after April 30th, 2024, you will not be able to set up a Slack or Microsoft Teams gateway using the instructions provided below. This is because new Amazon Q Business applications require integration with IAM Identity Center. We are currently working on updating the CloudFormation (CFN) template and the necessary steps to accommodate the setup of these gateways for new applications created since April 30th, 2024 with an expected completion date by May 30th, 2024.   |
 |-----------------------------------------|
 
 *See AWS Blog post: [Deploy a Slack gateway for Amazon Q, your business expert](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-q-your-business-expert/)*
