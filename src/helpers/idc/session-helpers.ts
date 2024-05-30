@@ -303,7 +303,7 @@ const exchangeIdPTokenForIAMSessionCreds = async (
   const assumeRoleRequest: AssumeRoleRequest = {
     RoleArn: env.qUserAPIRoleArn,
     RoleSessionName: 'q-gateway-for-slack',
-    DurationSeconds: 900,
+    DurationSeconds: 3600,
     ProvidedContexts: [
       {
         ProviderArn: 'arn:aws:iam::aws:contextProvider/IdentityCenter',
@@ -320,17 +320,12 @@ const exchangeIdPTokenForIAMSessionCreds = async (
   const sessionToken = assumeRoleResponse.Credentials?.SessionToken;
   const expiration = assumeRoleResponse.Credentials?.Expiration;
 
-  // adjust expiration to 2 minutes before actual expiration
-  const adjustedExpiration = new Date(expiration!);
-  adjustedExpiration.setMinutes(adjustedExpiration.getMinutes() - 2);
-  const adjustedExpirationString = adjustedExpiration.toISOString();
-
   // put credentials in a record
   const sessionCreds: Session = {
     accessKeyId: accessKeyId!,
     secretAccessKey: secretAccessKey!,
     sessionToken: sessionToken!,
-    expiration: adjustedExpirationString,
+    expiration: expiration!.toISOString(),
     refreshToken: refreshToken
   };
 
@@ -376,5 +371,7 @@ const hasSessionExpired = (expiration: string) => {
   const expirationDate = new Date(expiration);
   const now = new Date();
 
-  return expirationDate < now;
+  expirationDate.setMinutes(expirationDate.getMinutes() - 15);
+
+  return expirationDate <= now;
 };
