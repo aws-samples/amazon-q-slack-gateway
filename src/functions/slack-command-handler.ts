@@ -3,8 +3,6 @@ import { getMarkdownBlock, validateSlackRequest } from '@helpers/slack/slack-hel
 import { chatDependencies, deleteChannelMetadata, getChannelKey } from '@helpers/chat';
 import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
-import { SessionManagerEnv, getSessionCreds, startSession } from '@helpers/idc/session-helpers';
-import { getSignInBlocks } from '@helpers/amazon-q/amazon-q-helpers';
 
 const logger = makeLogger('slack-command-handler');
 
@@ -39,9 +37,7 @@ export const handler = async (
   _callback: Callback,
   dependencies = {
     ...chatDependencies,
-    validateSlackRequest,
-    getSessionCreds,
-    startSession
+    validateSlackRequest
   },
   slackEventsEnv: SlackEventsEnv = processSlackEventsEnv(process.env)
 ): Promise<APIGatewayProxyResult> => {
@@ -81,52 +77,6 @@ export const handler = async (
     {} as Record<string, string>
   );
   logger.debug(`Received slash command body ${JSON.stringify(body)}`);
-
-  // Validate if the Slack user has a valid IAM session
-  const sessionManagerEnv: SessionManagerEnv = {
-    oidcStateTableName: slackEventsEnv.OIDC_STATE_TABLE_NAME,
-    iamSessionCredentialsTableName: slackEventsEnv.IAM_SESSION_TABLE_NAME,
-    oidcIdPName: slackEventsEnv.OIDC_IDP_NAME,
-    oidcClientId: slackEventsEnv.OIDC_CLIENT_ID,
-    oidcClientSecretName: slackEventsEnv.OIDC_CLIENT_SECRET_NAME,
-    oidcIssuerUrl: slackEventsEnv.OIDC_ISSUER_URL,
-    oidcRedirectUrl: slackEventsEnv.OIDC_REDIRECT_URL,
-    kmsKeyArn: slackEventsEnv.KMS_KEY_ARN,
-    region: slackEventsEnv.AMAZON_Q_REGION,
-    qUserAPIRoleArn: slackEventsEnv.Q_USER_API_ROLE_ARN,
-    gatewayIdCAppArn: slackEventsEnv.GATEWAY_IDC_APP_ARN
-  };
-
-  try {
-    await dependencies.getSessionCreds(sessionManagerEnv, body.user_id);
-  } catch (error) {
-    // call sessionManager.startSession() to start a new session
-    logger.error(`Failed to get session: ${error}`);
-    const authorizationURL = await dependencies.startSession(sessionManagerEnv, body.user_id);
-
-    // post a message to channel to return a slack button for authorization url
-    await dependencies.sendSlackMessage(
-      slackEventsEnv,
-      body.user_id,
-      `<@${body.user_id}>, please sign in through the Amazon Q bot app to continue.`,
-      getSignInBlocks(authorizationURL)
-    );
-
-    // return 200 ok message
-    return {
-      statusCode: 200,
-      body: JSON.stringify({})
-    };
-  }
-
-  if (isEmpty(body.command)) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        error: 'Bad request'
-      })
-    };
-  }
 
   let commandStatus;
   if (body.command.startsWith('/new_conv')) {
