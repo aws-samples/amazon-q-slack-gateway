@@ -3,7 +3,7 @@
 | :zap: If you created a new Amazon Q Business application on or after April 30th, 2024, you can now set up a Slack gateway using the updated instructions provided below. These new Amazon Q Business applications are integrated with IAM Identity Center. The CloudFormation (CFN) template and the necessary steps have been updated to accommodate the setup of the Slack gateway for new applications.
 |-----------------------------------------|
 
-**Note:** The instructions provided in this guide are specific to Okta, but they should also work for other OIDC 2.0 compliant Identity Providers (IdPs) with minor adjustments.
+**Note:** The instructions provided in this guide are specific to Okta, but they should also work for other OIDC compliant OpenID provider/Identity Provider (IdPs) with minor adjustments.
 
 Amazon Q is a new generative AI-powered application that helps users get work done. Amazon Q can become your tailored business expert and let you discover content, brainstorm ideas, or create summaries using your company’s data safely and securely. For more information see: [Introducing Amazon Q, a new generative AI-powered assistant (preview)](https://aws.amazon.com/blogs/aws/introducing-amazon-q-a-new-generative-ai-powered-assistant-preview)
 
@@ -62,10 +62,10 @@ Create the client as a ['Web app'](https://help.okta.com/en-us/content/topics/ap
 
 #### 1.2 Create Trusted token issuer in IAM Identity Center
 
-Create trusted token issuer to trust tokens from OIDC issuer URL using these instructions listed here - https://docs.aws.amazon.com/singlesignon/latest/userguide/using-apps-with-trusted-token-issuer.html.
+Create trusted token issuer to trust tokens your Okta tenant using these instructions listed here - https://docs.aws.amazon.com/singlesignon/latest/userguide/using-apps-with-trusted-token-issuer.html.
 Or you can run the below script.
 
-For the script, you need to have the OIDC issuer URL and the AWS region in which you have your Q business application. To retrieve the OIDC issuer URL, go to Okta account console, click the left hamburger menu and open Security > API and copy the whole 'Issuer URI'.
+For the script, you need to have the OIDC issuer URL and the AWS region in which you have your Q business application. To retrieve the OIDC issuer URL, go to Okta account console, click the left hamburger menu and open Security > API and copy the whole 'Issuer URI'. 
 
 The script will output trusted token issuer ARN (TTI_ARN) which you will use in the next step.
 
@@ -77,7 +77,7 @@ The script will output trusted token issuer ARN (TTI_ARN) which you will use in 
 
 #### 1.3 Create Customer managed application in IAM Identity Center
 
-Create customer managed IdC application by running below script.
+Create customer managed application in IAM Identity Center(IdC) by running below script.
 
 For the script, you need to have the OIDC client ID, trusted token issuer ARN, and the region in which you have your Q business application. To retrieve the OIDC client ID, go to Okta account console, click the left hamburger menu and open Applications > Applications and click on the application you created in step 1.1. Copy the 'Client ID'. For TTI_ARN, you can use the output from the previous step.
 
