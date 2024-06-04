@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2024-05-28
+### Added
+Add support for Q Business Apps integrated with IdC
+- The gateway registers the Amazon Q Business Slack Gateway as an OpenID Connect (OIDC) app with Okta (or other OIDC compliant Identity Providers).
+- This registration allows the gateway to invoke the Q Business ChatSync API on behalf of the end-user.
+- The gateway provisions an OIDC callback handler for the Identity Provider (IdP) to return an authorization code after the end-user authenticates using the authorization grant flow.
+- The callback handler exchanges the authorization code for IAM session credentials through a series of interactions with the IdP, IdC, and AWS Security Token Service (STS).
+- The IAM session credentials, which are short-lived (15-minute duration), are encrypted and stored in a DynamoDB table along with the refresh token from the IdP.
+- The IAM session credentials are then used to invoke the Q Business ChatSync and PutFeedback APIs.
+- If the IAM session credentials expire, the refresh token from the IdP is used to obtain new IAM session credentials without requiring the end-user to sign in again.
+
 ## [0.1.3] - 2024-01-26
 ### Fixed
   - Merged #25 - adds flexibility to accomodate multiple slack applications with unique variations of the 
