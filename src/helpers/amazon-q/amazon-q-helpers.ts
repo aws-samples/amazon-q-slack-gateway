@@ -15,6 +15,7 @@ const AMAZON_Q_MSG_LIMIT = 7000;
 const WARN_TRUNCATED = `| Please note that you do not have all the conversation history due to limitation`;
 
 export const chat = async (
+  slackUserId: string,
   incomingMessage: string,
   attachments: AttachmentInput[],
   dependencies: ChatDependencies,
@@ -37,6 +38,7 @@ export const chat = async (
         : incomingMessage;
 
     const response = await dependencies.callClient(
+      slackUserId,
       inputMessage,
       attachments,
       env,

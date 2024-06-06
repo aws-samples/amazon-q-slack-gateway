@@ -3,35 +3,44 @@ import { SlackInteractionsEnv } from '@functions/slack-interaction-handler';
 import { makeLogger } from '@src/logging';
 import { v4 as uuid } from 'uuid';
 import {
-  QBusinessClient,
+  AttachmentInput,
   ChatSyncCommand,
+  ChatSyncCommandOutput,
+  MessageUsefulness,
+  MessageUsefulnessReason,
   PutFeedbackCommand,
   PutFeedbackCommandInput,
-  MessageUsefulnessReason,
-  MessageUsefulness,
   PutFeedbackCommandOutput,
-  ChatSyncCommandOutput,
-  AttachmentInput
+  QBusinessClient
 } from '@aws-sdk/client-qbusiness';
 import { Credentials } from 'aws-sdk';
 
 const logger = makeLogger('amazon-q-client');
 
-let amazonQClient: QBusinessClient | null = null;
+const amazonQClientBySlackUserId: { [key: string]: QBusinessClient } = {};
 
-export const getClient = (env: SlackEventsEnv, iamSessionCreds: Credentials) => {
-  if (amazonQClient === null) {
-    logger.debug(`Initiating AmazonQ client with region ${env.AMAZON_Q_REGION}`);
-    amazonQClient = new QBusinessClient({
-      credentials: iamSessionCreds,
-      region: env.AMAZON_Q_REGION
-    });
+export const getClient = (
+  env: SlackEventsEnv,
+  slackUserId: string,
+  iamSessionCreds: Credentials
+) => {
+  logger.debug(`Initiating AmazonQ client with region ${env.AMAZON_Q_REGION}`);
+  if (amazonQClientBySlackUserId[slackUserId]) {
+    return amazonQClientBySlackUserId[slackUserId];
   }
 
-  return amazonQClient;
+  const newClient = new QBusinessClient({
+    credentials: iamSessionCreds,
+    region: env.AMAZON_Q_REGION
+  });
+
+  amazonQClientBySlackUserId[slackUserId] = newClient;
+
+  return newClient;
 };
 
 export const callClient = async (
+  slackUserId: string,
   message: string,
   attachments: AttachmentInput[],
   env: SlackEventsEnv,
@@ -50,10 +59,11 @@ export const callClient = async (
   };
 
   logger.debug(`callClient input ${JSON.stringify(input)}`);
-  return await getClient(env, iamSessionCreds).send(new ChatSyncCommand(input));
+  return await getClient(env, slackUserId, iamSessionCreds).send(new ChatSyncCommand(input));
 };
 
 export const submitFeedbackRequest = async (
+  slackUserId: string,
   env: SlackInteractionsEnv,
   iamSessionCreds: Credentials,
   context: {
@@ -76,7 +86,9 @@ export const submitFeedbackRequest = async (
   };
 
   logger.debug(`putFeedbackRequest input ${JSON.stringify(input)}`);
-  const response = await getClient(env, iamSessionCreds).send(new PutFeedbackCommand(input));
+  const response = await getClient(env, slackUserId, iamSessionCreds).send(
+    new PutFeedbackCommand(input)
+  );
   logger.debug(`putFeedbackRequest output ${JSON.stringify(response)}`);
 
   return response;
