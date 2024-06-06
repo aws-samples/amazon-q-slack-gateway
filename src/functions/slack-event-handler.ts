@@ -332,7 +332,15 @@ export const handler = async (
   }
 
   const [output, slackMessage] = await Promise.all([
-    chat(prompt, attachments, dependencies, slackEventsEnv, iamSessionCreds, context),
+    chat(
+      body.event.user,
+      prompt,
+      attachments,
+      dependencies,
+      slackEventsEnv,
+      iamSessionCreds,
+      context
+    ),
     dependencies.sendSlackMessage(
       slackEventsEnv,
       body.event.channel,
