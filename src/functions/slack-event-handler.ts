@@ -6,7 +6,8 @@ import {
   getChannelKey,
   getChannelMetadata,
   saveChannelMetadata,
-  saveMessageMetadata
+  saveMessageMetadata,
+  deleteChannelMetadata
 } from '@helpers/chat';
 import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
@@ -243,12 +244,12 @@ export const handler = async (
     body.event.thread_ts
   );
 
-  const channelMetadata = await getChannelMetadata(channelKey, dependencies, slackEventsEnv);
+  var channelMetadata = await getChannelMetadata(channelKey, dependencies, slackEventsEnv);
   logger.debug(
     `ChannelKey: ${channelKey}, Cached channel metadata: ${JSON.stringify(channelMetadata)} `
   );
 
-  const context = {
+  var context = {
     conversationId: channelMetadata?.conversationId,
     parentMessageId: channelMetadata?.systemMessageId
   };
@@ -331,7 +332,7 @@ export const handler = async (
     attachments = attachments.slice(-MAX_FILE_ATTACHMENTS);
   }
 
-  const [output, slackMessage] = await Promise.all([
+  var [output, slackMessage] = await Promise.all([
     chat(prompt, attachments, dependencies, slackEventsEnv, iamSessionCreds, context),
     dependencies.sendSlackMessage(
       slackEventsEnv,
@@ -342,8 +343,22 @@ export const handler = async (
     )
   ]);
 
+
   if (output instanceof Error) {
-    const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
+    if(output?.message?.includes("Conversation not found or has expired")){
+      await deleteChannelMetadata(channelKey, dependencies, slackEventsEnv);
+      channelMetadata = await getChannelMetadata(channelKey, dependencies, slackEventsEnv);
+      context = {
+        conversationId: channelMetadata == null ? void 0 : channelMetadata.conversationId,
+        parentMessageId: channelMetadata == null ? void 0 : channelMetadata.systemMessageId
+      };
+      output = await chat(prompt, attachments, dependencies, slackEventsEnv, context)
+    }
+  }
+
+  if (output instanceof Error) {
+    var errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
+    errMsgWithDetails = errMsgWithDetails + "\n\ntry using the `/new_conversation` slash command to fix this error";
     const blocks = [getMarkdownBlock(errMsgWithDetails)];
 
     await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
@@ -378,6 +393,16 @@ export const handler = async (
     ...dependencies.getFeedbackBlocks(output)
   ];
 
+  if(output.systemMessage.startsWith("Sorry, ")){
+    if(body.event.type !== "app_mention"){
+      output.systemMessage = output.systemMessage + "\n\nMaybe try again after sending `/new_conversation` in the channel to help me know we've changed topics."
+    }else if(body.event.thread_ts){
+      output.systemMessage = output.systemMessage + "\n\nMaybe try again in the main channel to avoid the thread history from influencing my response."
+    }else{   
+      output.systemMessage = output.systemMessage + "\n\nMaybe try again after sending `/new_conversation` in the channel to help me know we've changed topics."
+    }
+  }
+  
   await Promise.all([
     saveChannelMetadata(
       channelKey,
