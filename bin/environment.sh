@@ -58,7 +58,7 @@ app_id=$(prompt_for_value "AmazonQAppId" "Amazon Q Application ID (copy from AWS
 region=$(prompt_for_value "AmazonQRegion" "Amazon Q Region" $(aws configure get region) "^[a-z]{2}-[a-z]+-[0-9]+$")
 ttl_days=$(prompt_for_value "ContextDaysToLive" "Number of days to keep conversation context" "90" "^[1-9][0-9]{0,3}$")
 oidc_idp_name=$(prompt_for_value "OIDCIdPName" "Name of Identity Provider (Okta, Cognito, Other)" "Okta" "^[a-zA-Z]{1,255}$")
-oidc_client_id=$(prompt_for_value "OIDCClientId" "OIDC Client ID" "none" "^[a-zA-Z0-9]{1,255}$")
+oidc_client_id=$(prompt_for_value "OIDCClientId" "OIDC Client ID" "none" "^[a-zA-Z0-9_-]{1,255}$")
 oidc_issuer_url=$(prompt_for_value "OIDCIssuerURL" "OIDC Issuer URL" "none" "^https://[a-zA-Z0-9.-]+(:[0-9]+)?(/.*)?$")
 gateway_idc_app_arn=$(prompt_for_value "GatewayIdCAppARN" "Q Gateway IdC App Arn" "none" "^arn:aws[a-zA-Z-]*:[a-zA-Z0-9-]*:[a-z0-9-]*:[0-9]{12}:[a-zA-Z0-9:/._-]+$")
 

@@ -214,7 +214,7 @@ function parameterizeTemplate(template, lambdas) {
     },
     OIDCClientId: {
       Type: 'String',
-      AllowedPattern: '^[a-zA-Z0-9]{1,255}$',
+      AllowedPattern: '^[a-zA-Z0-9_-]{1,255}$',
       Description: 'OIDC Client ID'
     },
     OIDCIssuerURL: {
