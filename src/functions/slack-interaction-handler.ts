@@ -1,7 +1,6 @@
 import { APIGatewayProxyResult, Callback, Context } from 'aws-lambda';
 import {
   createModal,
-  getMarkdownBlock,
   getMarkdownBlocks,
   openModal,
   SLACK_ACTION,
@@ -193,6 +192,7 @@ export const handler = async (
       }
 
       await dependencies.submitFeedbackRequest(
+        payload.user.id,
         slackInteractionsEnv,
         iamSessionCreds,
         {

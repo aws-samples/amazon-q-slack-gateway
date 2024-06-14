@@ -277,8 +277,6 @@ const exchangeIdPTokenForIAMSessionCreds = async (
 
   const idcIdToken = idcResponse.idToken!;
 
-  console.log(`IdC response ${JSON.stringify(idcResponse)}`);
-
   // decode the jwt token
   const decodedToken = jwt.decode(idcIdToken, { complete: true });
 
@@ -293,10 +291,6 @@ const exchangeIdPTokenForIAMSessionCreds = async (
 
   // Extract 'sts:identity-context' claim using type assertion
   const identityContext = (decodedToken.payload as Payload)['sts:identity_context'];
-
-  console.log(identityContext);
-
-  logger.debug(`IdC response ${JSON.stringify(idcResponse)}`);
 
   // call sts assume role
   const stsClient = new STS({ region: env.region });

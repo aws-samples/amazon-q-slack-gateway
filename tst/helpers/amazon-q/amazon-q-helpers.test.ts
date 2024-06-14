@@ -14,7 +14,7 @@ import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
 
 describe('AmazonQ helpers test', () => {
   test('Should get a response as block with context', async () => {
-    const response = await chat('message', [], MOCK_DEPENDENCIES, MOCK_ENV, MOCK_IAM_SESSION_CREDS);
+    const response = await chat('slackUserId', 'message', [], MOCK_DEPENDENCIES, MOCK_ENV, MOCK_IAM_SESSION_CREDS);
     expect(response).toEqual(amazonQValidResponse1);
   });
 
