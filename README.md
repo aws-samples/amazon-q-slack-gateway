@@ -5,18 +5,16 @@
 
 **Note:** The instructions provided in this guide are specific to Okta, but they should also work for other OIDC compliant OpenID provider/Identity Provider (IdPs) with minor adjustments.
 
-Amazon Q is a new generative AI-powered application that helps users get work done. Amazon Q can become your tailored business expert and let you discover content, brainstorm ideas, or create summaries using your company’s data safely and securely. For more information see: [Introducing Amazon Q, a new generative AI-powered assistant (preview)](https://aws.amazon.com/blogs/aws/introducing-amazon-q-a-new-generative-ai-powered-assistant-preview)
+[Amazon Q Business](https://aws.amazon.com/q/business/) is a generative AI-powered application that helps users get work done. Amazon Q Business can become your tailored business expert and let you discover content, brainstorm ideas, or gain further insight using your company’s data safely and securely. For more information see: [Introducing Amazon Q, a new generative AI-powered assistant (preview)](https://aws.amazon.com/blogs/aws/introducing-amazon-q-a-new-generative-ai-powered-assistant-preview)
 
-In this repo we share a project which lets you use Amazon Q's generative AI to enable Slack channel members  to access your organizations data and knowledge sources via conversational question-answering. You can connect to your organization data via data source connectors and integrate it with Slack Gateway for Amazon Q to enable access to your Slack channel members. It allows your users to:
-- Converse with Amazon Q using Slack Direct Message (DM) to ask questions and get answers based on company data, get help creating new content such as emails, and performing tasks. 
+In this repo we share a project which lets you connect your Amazon Q Business application to your Slack workspace and allow Slack members to access your organization's data and knowledge sources via conversational question-answering. You can connect to your organization data via data source connectors and integrate it with Slack Gateway for Amazon Q Business to enable access to your Slack workspace members. It allows your users to:
+- Converse with Amazon Q Business using Slack Direct Message (DM) to ask questions and get answers based on company data, get help creating new content such as emails, and performing tasks. 
 - You can also invite it to participate in your team channels. 
-  - In a channel users can ask it questions in a new message, or tag it in a thread at any point. Get it to provide additional data points, resolve a debate, or summarize the conversation and capture next steps. 
+  - In a channel users can ask it questions in a new message, or tag it in a thread at any point. Get it to provide additional data points or resolve a debate. 
 
 It's amazingly powerful. Here's a demo - seeing is believing!
- 
 
 https://github.com/aws-samples/amazon-q-slack-gateway/assets/10953374/6902a9ea-7a24-4e00-bd41-e1029d0f58e4
-
 
 It's easy to deploy in your own AWS Account, and add to your own Slack Workspace. We show you how below.
 
@@ -25,9 +23,8 @@ It's easy to deploy in your own AWS Account, and add to your own Slack Workspace
 - In channels it responds only to @mentions, and always replies in thread
 - Renders answers containing markdown - e.g. headings, lists, bold, italics, tables, etc. 
 - Provides thumbs up / down buttons to track user sentiment and help improve performance over time
-- Provides Source Attribution - see references to sources used by Amazon Q
+- Provides Source Attribution - see references to sources used by Amazon Q Business
 - Aware of conversation context - it tracks the conversation and applies context
-- Aware of multiple users - when it's tagged in a thread, it knows who said what, and when - so it can contribute in context and accurately summarize the thread when asked.  
 - Process up to 5 attached files for document question answering, summaries, etc.
 - Reset and start new conversation in DM channel by using `/new_conversation`
 
