@@ -118,10 +118,6 @@ if ! aws sso-admin put-application-access-scope --application-arn $GATEWAY_IDC_A
     echo "Failed to set access scope for conversations."
     exit 1
 fi
-if ! aws sso-admin put-application-access-scope --application-arn $GATEWAY_IDC_ARN --scope "qbusiness:messages:access"; then
-    echo "Failed to set access scope for messages."
-    exit 1
-fi
 
 # Echo GATEWAY_IDC_ARN at the end
 echo "$APPLICATION_NAME is setup with GATEWAY_IDC_ARN: $GATEWAY_IDC_ARN"
