@@ -10,11 +10,12 @@ import {
 } from '@helpers/chat';
 import { getOrThrowIfEmpty, isEmpty } from '@src/utils';
 import { makeLogger } from '@src/logging';
-import { chat, getSignInBlocks } from '@helpers/amazon-q/amazon-q-helpers';
+import { chat, getSignInBlocks, getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
 import { UsersInfoResponse } from '@slack/web-api';
 import { FileElement } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 import { AttachmentInput } from '@aws-sdk/client-qbusiness';
 import { Credentials } from 'aws-sdk';
+import { FailedAttachmentEvent, MetadataEvent, TextOutputEvent } from '@aws-sdk/client-qbusiness';
 
 const logger = makeLogger('slack-event-handler');
 
@@ -331,90 +332,143 @@ export const handler = async (
     attachments = attachments.slice(-MAX_FILE_ATTACHMENTS);
   }
 
-  const [output, slackMessage] = await Promise.all([
-    chat(
-      body.event.user,
-      prompt,
-      attachments,
-      dependencies,
-      slackEventsEnv,
-      iamSessionCreds,
-      context
-    ),
-    dependencies.sendSlackMessage(
-      slackEventsEnv,
-      body.event.channel,
-      `Processing...`,
-      [getMarkdownBlock(`Processing...`)],
-      body.event.type === 'app_mention' ? body.event.ts : undefined
-    )
-  ]);
+const [output, slackMessage] = await Promise.all([
+  chat(
+    body.event.user,
+    prompt,
+    attachments,
+    dependencies,
+    slackEventsEnv,
+    iamSessionCreds,
+    context
+  ),
+  dependencies.sendSlackMessage(
+    slackEventsEnv,
+    body.event.channel,
+    `Processing...`,
+    [getMarkdownBlock(`Processing...`)],
+    body.event.type === 'app_mention' ? body.event.ts : undefined
+  )
+]);
 
-  if (output instanceof Error) {
-    const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
-    const blocks = [getMarkdownBlock(errMsgWithDetails)];
+if (output instanceof Error) {
+  const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
+  const blocks = [getMarkdownBlock(errMsgWithDetails)];
+  await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      chat: { context, input, output, blocks },
+      error: output
+    })
+  };
+}
 
-    await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
+let outputText = '';
+let buffer = '';
+const bufferSize = 25; // Adjust this value to control the chunk size
 
+let failedAttachmentEvents: FailedAttachmentEvent[] = [];
+let latestMetadataEvent: MetadataEvent | undefined
+let latestTextEvent: TextOutputEvent | undefined
+
+if (output.outputStream === undefined) {
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      chat: { context, prompt, output}
+    })
+  }; 
+}
+
+for await (const event of output.outputStream) {
+  if (event.textEvent) {
+    latestTextEvent = event.textEvent;
+    buffer += latestTextEvent.systemMessage;
+
+    if (buffer.length >= bufferSize) {
+      outputText += buffer;
+      if (latestTextEvent.systemMessageId === undefined) {
+        logger.debug('SystemMessageID is undefined');
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            chat: { context, prompt, output }
+          })
+        };
+      }
+        await dependencies.updateSlackMessage(
+          slackEventsEnv,
+          slackMessage,
+          outputText,
+          getResponseAsBlocks(outputText, latestTextEvent.systemMessageId),
+        );
+        buffer = '';
+      }}
+
+      else if (event.failedAttachmentEvent) {
+        failedAttachmentEvents?.push(event.failedAttachmentEvent)
+      }
+
+      else if (event.metadataEvent) {
+        latestMetadataEvent = event.metadataEvent;
+      }
+    }
+
+  if (latestTextEvent === undefined || latestTextEvent.systemMessageId === undefined) {
+    logger.debug('TextEventMessageID is undefined');
     return {
       statusCode: 200,
       body: JSON.stringify({
-        chat: { context, input, output, blocks },
-        error: output
+        chat: { context, prompt, output }
       })
     };
   }
 
-  if (!isEmpty(output.failedAttachments)) {
-    // Append error message for failed attachments to systemMessage
+  if (failedAttachmentEvents) {
     const fileErrorMessages = [];
-    for (const f of output.failedAttachments) {
-      if (f.status === 'FAILED') {
-        logger.debug(`Failed attachment: File ${f.name} - ${f.error?.errorMessage}`);
-        fileErrorMessages.push(` \u2022 ${f.name}: ${f.error?.errorMessage}`);
+    for  (const f of failedAttachmentEvents) {
+      if (f.attachment?.status == 'FAILED') {
+            logger.debug(`Failed attachment: File ${f.attachment.name} - ${f.attachment.error?.errorMessage}`);
+            fileErrorMessages.push(` \u2022 ${f.attachment.name}: ${f.attachment.error?.errorMessage}`);
       }
     }
     if (!isEmpty(fileErrorMessages)) {
-      output.systemMessage = `${
-        output.systemMessage
+      outputText = `${
+        outputText
       }\n\n*_Failed attachments:_*\n${fileErrorMessages.join('\n')}`;
     }
   }
 
-  const blocks = [
-    ...dependencies.getResponseAsBlocks(output),
-    ...dependencies.getFeedbackBlocks(output)
-  ];
+  if (latestMetadataEvent === undefined) {
+    logger.debug('MetadataEvent is undefined');
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        chat: { context, prompt, output }
+      })
+    };
+  }
 
   await Promise.all([
-    saveChannelMetadata(
-      channelKey,
-      output.conversationId ?? '',
-      output.systemMessageId ?? '',
-      dependencies,
-      slackEventsEnv
-    ),
-    saveMessageMetadata(output, dependencies, slackEventsEnv),
-    dependencies.updateSlackMessage(
-      slackEventsEnv,
-      slackMessage,
-      output.systemMessage,
-      dependencies.getResponseAsBlocks(output)
-    )
+    saveChannelMetadata(channelKey, latestMetadataEvent?.conversationId ?? '', latestMetadataEvent?.systemMessageId ?? '', dependencies, slackEventsEnv),
+    saveMessageMetadata(latestMetadataEvent, dependencies, slackEventsEnv),
+    dependencies.updateSlackMessage(slackEventsEnv, slackMessage, outputText + buffer, getResponseAsBlocks(outputText, latestMetadataEvent?.systemMessageId ?? '', latestMetadataEvent?.sourceAttributions || []),
+  ),
   ]);
 
   await dependencies.sendSlackMessage(
     slackEventsEnv,
     body.event.channel,
     FEEDBACK_MESSAGE,
-    dependencies.getFeedbackBlocks(output),
+    getFeedbackBlocks(latestTextEvent),
     body.event.type === 'app_mention' ? body.event.ts : undefined
   );
 
   return {
     statusCode: 200,
     body: JSON.stringify({
-      chat: { context, prompt, output, blocks }
+      chat: { context, prompt, outputText, output }
     })
   };
 };

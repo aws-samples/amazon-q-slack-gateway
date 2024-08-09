@@ -4,9 +4,10 @@ import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
 import { ChatDependencies } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
-import { ChatSyncCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
+import { ChatCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
 import { Credentials } from 'aws-sdk';
 import { ExpiredTokenException } from '@aws-sdk/client-sts';
+import { SourceAttribution, TextOutputEvent } from '@aws-sdk/client-qbusiness';
 
 const logger = makeLogger('amazon-q-helpers');
 
@@ -25,7 +26,7 @@ export const chat = async (
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<ChatSyncCommandOutput | Error> => {
+): Promise<ChatCommandOutput | Error> => {
   try {
     // Enforce max input message limit - may cause undesired side effects
     // TODO consider 'smarter' truncating of number of chat history messages, etc. rather
@@ -61,12 +62,11 @@ export const chat = async (
   }
 };
 
-export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
-  if (isEmpty(response.systemMessage)) {
+export const getResponseAsBlocks = (content: string, systemMessageId: string, sourceAttributions?: SourceAttribution[]) => {
+  if (!content) {
     return [];
   }
 
-  const content = response.systemMessage;
 
   return [
     ...(!hasTable(content)
@@ -74,42 +74,48 @@ export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
       : getMarkdownBlocks(
           `${convertHN(getTablePrefix(content))}\n\n${parseTable(getTable(content))}`
         )),
-    ...(!isEmpty(response.sourceAttributions)
-      ? [createButton('View source(s)', response.systemMessageId ?? '')]
+    ...(!isEmpty(sourceAttributions)
+      ? [createButton('View source(s)', systemMessageId ?? '')]
       : [])
   ];
 };
 
-export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
-  {
-    type: 'actions',
-    block_id: `feedback-${response.conversationId}-${response.systemMessageId}`,
-    elements: [
+export const getFeedbackBlocks = (textEvent: TextOutputEvent): Block[] => {
+    if (!textEvent) {
+      return [];
+    }
+  
+    return [
       {
-        type: 'button',
-        text: {
-          type: 'plain_text',
-          emoji: true,
-          text: ':thumbsup:'
-        },
-        style: 'primary',
-        action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP],
-        value: response.systemMessageId
-      },
-      {
-        type: 'button',
-        text: {
-          type: 'plain_text',
-          emoji: true,
-          text: ':thumbsdown:'
-        },
-        style: 'danger',
-        action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN],
-        value: response.systemMessageId
-      }
-    ]
-  } as Block
-];
+        type: 'actions',
+        block_id: `feedback-${textEvent.conversationId}-${textEvent.systemMessageId}`,
+        elements: [
+          {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              emoji: true,
+              text: ':thumbsup:',
+            },
+            style: 'primary',
+            action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP],
+            value: textEvent.systemMessageId,
+          },
+          {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              emoji: true,
+              text: ':thumbsdown:',
+            },
+            style: 'danger',
+            action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN],
+            value: textEvent.systemMessageId,
+          },
+        ],
+      } as Block,
+    ];
+  };
 
 export const getSignInBlocks = (authorizationURL: string): Block[] => [
   {
