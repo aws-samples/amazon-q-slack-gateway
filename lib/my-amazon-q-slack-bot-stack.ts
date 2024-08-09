@@ -208,7 +208,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         ChatPolicy: new PolicyDocument({
           statements: [
             new PolicyStatement({
-              actions: ['qbusiness:ChatSync', 'qbusiness:PutFeedback'],
+              actions: ['qbusiness:Chat', 'qbusiness:PutFeedback'],
               // parametrized
               resources: [`arn:aws:qbusiness:*:*:application/${env.AmazonQAppId}`]
             })
@@ -249,7 +249,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         ChatPolicy: new PolicyDocument({
           statements: [
             new PolicyStatement({
-              actions: ['qbusiness:ChatSync', 'qbusiness:PutFeedback'],
+              actions: ['qbusiness:Chat', 'qbusiness:PutFeedback'],
               resources: ['arn:aws:qbusiness:*:*:application/*']
             })
           ]
