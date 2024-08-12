@@ -59,7 +59,6 @@ const amazonQValidResponse2 = {
   outputStream: {
     [Symbol.asyncIterator]: async function* () {
       yield {
-        eventType: "metadataEvent",
         metadataEvent: {
           conversationId: "91a6642c-8b3d-433e-a9cb-233b42a0d63b",
           finalTextMessage: "Simple Text with Header",
@@ -70,7 +69,6 @@ const amazonQValidResponse2 = {
       };
 
       yield {
-        eventType: "textEvent",
         textEvent: {
           conversationId: "91a6642c-8b3d-433e-a9cb-233b42a0d63b",
           systemMessage: "This is a simple text\n and now with a \n*header*\n*another header*",
