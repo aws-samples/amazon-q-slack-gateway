@@ -4,8 +4,8 @@ import { makeLogger } from '@src/logging';
 import { v4 as uuid } from 'uuid';
 import {
   AttachmentInput,
-  ChatSyncCommand,
-  ChatSyncCommandOutput,
+  ChatCommand,
+  ChatCommandOutput,
   MessageUsefulness,
   MessageUsefulnessReason,
   PutFeedbackCommand,
@@ -49,17 +49,22 @@ export const callClient = async (
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<ChatSyncCommandOutput> => {
+): Promise<ChatCommandOutput> => {
   const input = {
     applicationId: env.AMAZON_Q_APP_ID,
     clientToken: uuid(),
-    userMessage: message,
-    ...(attachments.length > 0 && { attachments }),
-    ...context
+    inputStream: (async function* () {
+      yield { textEvent: { userMessage: message } };
+      for (const attachment of attachments) {
+        yield { attachmentEvent: { attachment } };
+      }
+      yield { endOfInputEvent: {} };
+    })(),
+    ...context,
   };
 
   logger.debug(`callClient input ${JSON.stringify(input)}`);
-  return await getClient(env, slackUserId, iamSessionCreds).send(new ChatSyncCommand(input));
+  return await getClient(env, slackUserId, iamSessionCreds).send(new ChatCommand(input));
 };
 
 export const submitFeedbackRequest = async (

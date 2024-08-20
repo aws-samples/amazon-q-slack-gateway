@@ -4,9 +4,10 @@ import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
 import { ChatDependencies } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
-import { ChatSyncCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
+import { ChatCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
 import { Credentials } from 'aws-sdk';
 import { ExpiredTokenException } from '@aws-sdk/client-sts';
+import { SourceAttribution, TextOutputEvent } from '@aws-sdk/client-qbusiness';
 
 const logger = makeLogger('amazon-q-helpers');
 
@@ -25,7 +26,7 @@ export const chat = async (
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<ChatSyncCommandOutput | Error> => {
+): Promise<ChatCommandOutput | Error> => {
   try {
     // Enforce max input message limit - may cause undesired side effects
     // TODO consider 'smarter' truncating of number of chat history messages, etc. rather
@@ -45,7 +46,7 @@ export const chat = async (
       iamSessionCreds,
       context
     );
-    logger.debug(`AmazonQ chatSync response: ${JSON.stringify(response)}`);
+    logger.debug(`AmazonQ Chat response: ${JSON.stringify(response)}`);
     return response;
   } catch (error) {
     logger.error(`Caught Exception: ${JSON.stringify(error)}`);
@@ -61,12 +62,10 @@ export const chat = async (
   }
 };
 
-export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
-  if (isEmpty(response.systemMessage)) {
+export const getResponseAsBlocks = (content: string, systemMessageId: string, sourceAttributions? : SourceAttribution[]) => {
+  if (!content) {
     return [];
   }
-
-  const content = response.systemMessage;
 
   return [
     ...(!hasTable(content)
@@ -74,16 +73,16 @@ export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
       : getMarkdownBlocks(
           `${convertHN(getTablePrefix(content))}\n\n${parseTable(getTable(content))}`
         )),
-    ...(!isEmpty(response.sourceAttributions)
-      ? [createButton('View source(s)', response.systemMessageId ?? '')]
+    ...(!isEmpty(sourceAttributions)
+      ? [createButton('View source(s)', systemMessageId ?? '')]
       : [])
   ];
 };
 
-export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
+export const getFeedbackBlocks = (conversationId: string, systemMessageId: string): Block[] => [
   {
     type: 'actions',
-    block_id: `feedback-${response.conversationId}-${response.systemMessageId}`,
+    block_id: `feedback-${conversationId}-${systemMessageId}`,
     elements: [
       {
         type: 'button',
@@ -94,7 +93,7 @@ export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
         },
         style: 'primary',
         action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_UP],
-        value: response.systemMessageId
+        value: systemMessageId
       },
       {
         type: 'button',
@@ -105,7 +104,7 @@ export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
         },
         style: 'danger',
         action_id: SLACK_ACTION[SLACK_ACTION.FEEDBACK_DOWN],
-        value: response.systemMessageId
+        value: systemMessageId
       }
     ]
   } as Block

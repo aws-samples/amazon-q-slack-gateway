@@ -10,7 +10,7 @@ import {
   updateSlackMessage
 } from '@helpers/slack/slack-helpers';
 import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
-import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
+import { MetadataEvent } from '@aws-sdk/client-qbusiness';
 
 export interface ChatResponse {
   systemMessage: string;
@@ -94,18 +94,18 @@ export const saveChannelMetadata = async (
 };
 
 export const saveMessageMetadata = async (
-  amazonQResponse: ChatSyncCommandOutput,
+  metadataEvent: MetadataEvent,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) => {
   await dependencies.putItem({
     TableName: env.MESSAGE_METADATA_TABLE_NAME,
     Item: {
-      messageId: amazonQResponse.systemMessageId,
-      conversationId: amazonQResponse.conversationId,
-      sourceAttributions: amazonQResponse.sourceAttributions,
-      systemMessageId: amazonQResponse.systemMessageId,
-      userMessageId: amazonQResponse.userMessageId,
+      messageId: metadataEvent.systemMessageId,
+      conversationId: metadataEvent.conversationId,
+      sourceAttributions: metadataEvent.sourceAttributions,
+      systemMessageId: metadataEvent.systemMessageId,
+      userMessageId: metadataEvent.userMessageId,
       ts: Date.now(),
       expireAt: expireAt(env)
     }
