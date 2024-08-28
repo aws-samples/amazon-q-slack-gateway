@@ -1,7 +1,8 @@
 import { Credentials, HttpResponse } from 'aws-sdk';
 import amazonQValidResponse1TextTable from '@tst/mocks/amazon-q/valid-response-1.json';
+import { amazonQValidStreamResponse1 } from '@tst/mocks/amazon-q/valid-stream-responses';
 import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
-import { ChatSyncCommandOutput, PutFeedbackCommandOutput } from '@aws-sdk/client-qbusiness';
+import { ChatSyncCommandOutput, ChatCommandOutput, PutFeedbackCommandOutput } from '@aws-sdk/client-qbusiness';
 
 export const MOCK_ENV = {
   SLACK_SECRET_NAME: 'SLACK_SECRET_NAME',
@@ -40,7 +41,8 @@ export const MOCK_AWS_RESPONSE = {
 };
 
 export const MOCK_DEPENDENCIES = {
-  callClient: () => Promise.resolve(amazonQValidResponse1TextTable as ChatSyncCommandOutput),
+  callChatSyncCommand: () => Promise.resolve(amazonQValidResponse1TextTable as ChatSyncCommandOutput),
+  callChatCommand: () => Promise.resolve(amazonQValidStreamResponse1 as ChatCommandOutput),
   submitFeedbackRequest: () => Promise.resolve({} as PutFeedbackCommandOutput),
   deleteItem: async () => MOCK_AWS_RESPONSE,
   putItem: async () => MOCK_AWS_RESPONSE,

@@ -1,24 +1,41 @@
-import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { createButton, getMarkdownBlocks, SLACK_ACTION } from '@helpers/slack/slack-helpers';
 import { makeLogger } from '@src/logging';
 import { isEmpty } from '@src/utils';
-import { ChatDependencies } from '@src/helpers/chat';
 import { Block } from '@slack/web-api';
-import { ChatSyncCommandOutput, AttachmentInput } from '@aws-sdk/client-qbusiness';
+import { ChatSyncCommandOutput, ChatCommandOutput, SourceAttribution, MetadataEvent, AttachmentInput } from '@aws-sdk/client-qbusiness';
+import { ExpiredTokenException } from '@aws-sdk/client-sso-oidc';
+import { sendChatSyncCommand, sendChatCommand } from './amazon-q-client';
 import { Credentials } from 'aws-sdk';
-import { ExpiredTokenException } from '@aws-sdk/client-sts';
-
+import { SlackEventsEnv } from '@src/functions/slack-event-handler';
 const logger = makeLogger('amazon-q-helpers');
 
-// Member must have length less than or equal to 7000
+
 const AMAZON_Q_MSG_LIMIT = 7000;
 const WARN_TRUNCATED = `| Please note that you do not have all the conversation history due to limitation`;
 
-export const chat = async (
+const truncateMessageIfNeeded = (message: string): string => {
+  return message.length > AMAZON_Q_MSG_LIMIT
+    ? message.slice(message.length + WARN_TRUNCATED.length - AMAZON_Q_MSG_LIMIT) + WARN_TRUNCATED
+    : message;
+};
+
+const handleError = (error: unknown): Error => {
+  logger.error(`Caught Exception: ${JSON.stringify(error)}`);
+  if (error instanceof Error) {
+    logger.debug(error.stack);
+    if (error instanceof ExpiredTokenException) {
+      logger.error(`Token expired: ${error.message}`);
+    }
+    return new Error(error.message);
+  } else {
+    return new Error(`${JSON.stringify(error)}`);
+  }
+};
+
+export const callChatSyncCommand = async (
   slackUserId: string,
-  incomingMessage: string,
+  message: string,
   attachments: AttachmentInput[],
-  dependencies: ChatDependencies,
   env: SlackEventsEnv,
   iamSessionCreds: Credentials,
   context?: {
@@ -27,46 +44,52 @@ export const chat = async (
   }
 ): Promise<ChatSyncCommandOutput | Error> => {
   try {
-    // Enforce max input message limit - may cause undesired side effects
-    // TODO consider 'smarter' truncating of number of chat history messages, etc. rather
-    // than simple input string truncation which may corrupt JSON formatting of message history
-    const inputMessage =
-      incomingMessage.length > AMAZON_Q_MSG_LIMIT
-        ? incomingMessage.slice(
-            incomingMessage.length + WARN_TRUNCATED.length - AMAZON_Q_MSG_LIMIT
-          ) + WARN_TRUNCATED
-        : incomingMessage;
-
-    const response = await dependencies.callClient(
+    message = truncateMessageIfNeeded(message);
+    const response = await sendChatSyncCommand(
       slackUserId,
-      inputMessage,
+      message,
       attachments,
       env,
       iamSessionCreds,
       context
-    );
-    logger.debug(`AmazonQ chatSync response: ${JSON.stringify(response)}`);
+    )
     return response;
   } catch (error) {
-    logger.error(`Caught Exception: ${JSON.stringify(error)}`);
-    if (error instanceof Error) {
-      logger.debug(error.stack);
-      if (error instanceof ExpiredTokenException) {
-        logger.error(`Token expired: ${error.message}`);
-      }
-      return new Error(error.message);
-    } else {
-      return new Error(`${JSON.stringify(error)}`);
-    }
+    return handleError(error);
   }
-};
+}
 
-export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
-  if (isEmpty(response.systemMessage)) {
+export const callChatCommand = async (
+  slackUserId: string,
+  message: string,
+  attachments: AttachmentInput[],
+  env: SlackEventsEnv,
+  iamSessionCreds: Credentials,
+  context?: {
+    conversationId: string;
+    parentMessageId: string;
+  }
+): Promise<ChatCommandOutput | Error> => {
+  try {
+    message = truncateMessageIfNeeded(message);
+    const response = await sendChatCommand(
+      slackUserId,
+      message,
+      attachments,
+      env,
+      iamSessionCreds,
+      context
+    )
+    return response;
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export const getResponseAsBlocks = (content: string, systemMessageId: string, sourceAttributions: SourceAttribution[]) => {
+  if (isEmpty(content)) {
     return [];
   }
-
-  const content = response.systemMessage;
 
   return [
     ...(!hasTable(content)
@@ -74,13 +97,14 @@ export const getResponseAsBlocks = (response: ChatSyncCommandOutput) => {
       : getMarkdownBlocks(
           `${convertHN(getTablePrefix(content))}\n\n${parseTable(getTable(content))}`
         )),
-    ...(!isEmpty(response.sourceAttributions)
-      ? [createButton('View source(s)', response.systemMessageId ?? '')]
+    ...(!isEmpty(sourceAttributions)
+      ? [createButton('View source(s)', systemMessageId ?? '')]
       : [])
   ];
 };
 
-export const getFeedbackBlocks = (response: ChatSyncCommandOutput): Block[] => [
+
+export const getFeedbackBlocks = (response: ChatSyncCommandOutput | MetadataEvent): Block[] => [
   {
     type: 'actions',
     block_id: `feedback-${response.conversationId}-${response.systemMessageId}`,

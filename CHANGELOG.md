@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2024-08-29
+### Added
+Add optional streaming response feature.
+- New Lambda function queries the Amazon Q Business Chat API and updates the Slack channel in real-time as LLM generates response.
+- Can easily switch between ChatSync and Chat response modes by modifying the Slack app's event subscription endpoint.
+
 ## [0.2.0] - 2024-05-28
 ### Added
 Add support for Q Business Apps integrated with IdC

@@ -11,10 +11,12 @@ import {
   PutFeedbackCommand,
   PutFeedbackCommandInput,
   PutFeedbackCommandOutput,
-  QBusinessClient
+  QBusinessClient,
+  ChatCommand,
+  ChatCommandOutput,
 } from '@aws-sdk/client-qbusiness';
-import { Credentials } from 'aws-sdk';
 
+import { Credentials } from 'aws-sdk';
 const logger = makeLogger('amazon-q-client');
 
 const amazonQClientBySlackUserId: { [key: string]: QBusinessClient } = {};
@@ -39,7 +41,7 @@ export const getClient = (
   return newClient;
 };
 
-export const callClient = async (
+export const sendChatSyncCommand = async (
   slackUserId: string,
   message: string,
   attachments: AttachmentInput[],
@@ -49,17 +51,41 @@ export const callClient = async (
     conversationId: string;
     parentMessageId: string;
   }
-): Promise<ChatSyncCommandOutput> => {
+): Promise<ChatSyncCommandOutput | Error> => {
+    const input = {
+      applicationId: env.AMAZON_Q_APP_ID,
+      clientToken: uuid(),
+      ...context,
+      userMessage: message,
+      ...(attachments.length > 0 && { attachments })
+    };
+    return await getClient(env, slackUserId, iamSessionCreds).send(new ChatSyncCommand(input));
+};
+
+export const sendChatCommand = async (
+  slackUserId: string,
+  message: string,
+  attachments: AttachmentInput[],
+  env: SlackEventsEnv,
+  iamSessionCreds: Credentials,
+  context?: {
+    conversationId: string;
+    parentMessageId: string;
+  },
+): Promise<ChatCommandOutput | Error> => {
   const input = {
     applicationId: env.AMAZON_Q_APP_ID,
     clientToken: uuid(),
-    userMessage: message,
-    ...(attachments.length > 0 && { attachments }),
-    ...context
+    ... context,
+    inputStream: (async function* () {
+      yield { textEvent: { userMessage: message } };
+      for (const attachment of attachments) {
+        yield { attachmentEvent: { attachment } };
+      }
+      yield { endOfInputEvent: {} };
+    })(),
   };
-
-  logger.debug(`callClient input ${JSON.stringify(input)}`);
-  return await getClient(env, slackUserId, iamSessionCreds).send(new ChatSyncCommand(input));
+  return await getClient(env, slackUserId, iamSessionCreds).send(new ChatCommand(input));
 };
 
 export const submitFeedbackRequest = async (

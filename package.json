@@ -1,6 +1,6 @@
 {
   "name": "my_amazon_q_slack_bot",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "bin": {
     "my_enterprise_q_slack_bot": "bin/my_amazon_q_slack_bot.js"
   },
@@ -36,13 +36,13 @@
   },
   "dependencies": {
     "@aws-crypto/client-node": "^4.0.0",
-    "@aws-sdk/client-cloudformation": "^3.465.0",
-    "@aws-sdk/client-qbusiness": "^3.565.0",
-    "@aws-sdk/client-s3": "^3.465.0",
-    "@aws-sdk/client-secrets-manager": "^3.565.0",
-    "@aws-sdk/client-sso-oidc": "^3.565.0",
-    "@aws-sdk/client-sts": "^3.565.0",
-    "@aws-sdk/lib-dynamodb": "^3.465.0",
+    "@aws-sdk/client-cloudformation": "^3.620.0",
+    "@aws-sdk/client-qbusiness": "^3.620.0",
+    "@aws-sdk/client-s3": "^3.620.0",
+    "@aws-sdk/client-secrets-manager": "^3.620.0",
+    "@aws-sdk/client-sso-oidc": "^3.620.0",
+    "@aws-sdk/client-sts": "^3.620.0",
+    "@aws-sdk/lib-dynamodb": "^3.620.0",
     "@slack/web-api": "^6.10.0",
     "@types/aws-lambda": "^8.10.119",
     "archiver": "^6.0.1",
