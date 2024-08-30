@@ -60,7 +60,8 @@ ttl_days=$(prompt_for_value "ContextDaysToLive" "Number of days to keep conversa
 oidc_idp_name=$(prompt_for_value "OIDCIdPName" "Name of Identity Provider (Okta, Cognito, Other)" "Okta" "^[a-zA-Z]{1,255}$")
 oidc_client_id=$(prompt_for_value "OIDCClientId" "OIDC Client ID" "none" "^[a-zA-Z0-9_-]{1,255}$")
 oidc_issuer_url=$(prompt_for_value "OIDCIssuerURL" "OIDC Issuer URL" "none" "^https://[a-zA-Z0-9.-]+(:[0-9]+)?(/.*)?$")
-gateway_idc_app_arn=$(prompt_for_value "GatewayIdCAppARN" "Q Gateway IdC App Arn" "none" "^arn:aws[a-zA-Z-]*:[a-zA-Z0-9-]*:[a-z0-9-]*:[0-9]{12}:[a-zA-Z0-9:/._-]+$")
+gateway_idc_app_arn=$(prompt_for_value "GatewayIdCAppARN" "Q Gateway IdC App Arn" "none" "^arn:aws[a-zA-Z-]*:[a-zA-Z0-9-]*:[a-z0-9-]*:[0-9]{12}:[a-zA-Z0-9:/._-]+$"),
+chatstream_buffer_size=$(prompt_for_value "ChatStreamBufferSize" "ChatStream Buffer Size" "25" "^[1-9][0-9]{0,2}$")
 
 # Create or update the JSON file
 cp $json_file $json_file.bak 2> /dev/null
@@ -74,6 +75,7 @@ jq -n \
   --arg oidc_client_id "$oidc_client_id" \
   --arg oidc_issuer_url "$oidc_issuer_url" \
   --arg gateway_idc_app_arn "$gateway_idc_app_arn" \
+  --arg chatstream_buffer_size "$chatstream_buffer_size" \
   '{
     StackName: $stack_name,
     AmazonQAppId: $app_id,
@@ -82,7 +84,8 @@ jq -n \
     OIDCIdPName: $oidc_idp_name,
     OIDCClientId: $oidc_client_id,
     OIDCIssuerURL: $oidc_issuer_url,
-    GatewayIdCAppARN: $gateway_idc_app_arn
+    GatewayIdCAppARN: $gateway_idc_app_arn,
+    ChatStreamBufferSize: $chatstream_buffer_size
   }' > "$json_file"
 
 echo "Configuration saved to $json_file"
