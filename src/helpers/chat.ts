@@ -1,6 +1,6 @@
 import { SlackEventsEnv } from '@functions/slack-event-handler';
 import { Block } from '@slack/web-api';
-import { callClient, submitFeedbackRequest } from '@helpers/amazon-q/amazon-q-client';
+import { submitFeedbackRequest } from '@helpers/amazon-q/amazon-q-client';
 import { deleteItem, getItem, putItem } from '@helpers/dynamodb-client';
 import {
   getUserInfo,
@@ -9,15 +9,16 @@ import {
   sendSlackMessage,
   updateSlackMessage
 } from '@helpers/slack/slack-helpers';
-import { getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
-import { ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
+import { callChatCommand, callChatSyncCommand, getFeedbackBlocks, getResponseAsBlocks } from '@helpers/amazon-q/amazon-q-helpers';
+import { ChatSyncCommandOutput, MetadataEvent } from '@aws-sdk/client-qbusiness';
 
 export interface ChatResponse {
   systemMessage: string;
 }
 
 export const chatDependencies = {
-  callClient,
+  callChatCommand,
+  callChatSyncCommand,
   submitFeedbackRequest,
   deleteItem,
   getItem,
@@ -94,7 +95,7 @@ export const saveChannelMetadata = async (
 };
 
 export const saveMessageMetadata = async (
-  amazonQResponse: ChatSyncCommandOutput,
+  amazonQResponse: ChatSyncCommandOutput | MetadataEvent,
   dependencies: ChatDependencies,
   env: SlackEventsEnv
 ) => {

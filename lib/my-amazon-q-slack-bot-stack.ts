@@ -208,7 +208,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         ChatPolicy: new PolicyDocument({
           statements: [
             new PolicyStatement({
-              actions: ['qbusiness:ChatSync', 'qbusiness:PutFeedback'],
+              actions: ['qbusiness:ChatSync', 'qbusiness:Chat', 'qbusiness:PutFeedback'],
               // parametrized
               resources: [`arn:aws:qbusiness:*:*:application/${env.AmazonQAppId}`]
             })
@@ -249,7 +249,7 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         ChatPolicy: new PolicyDocument({
           statements: [
             new PolicyStatement({
-              actions: ['qbusiness:ChatSync', 'qbusiness:PutFeedback'],
+              actions: ['qbusiness:ChatSync', 'qbusiness:Chat', 'qbusiness:PutFeedback'],
               resources: ['arn:aws:qbusiness:*:*:application/*']
             })
           ]
@@ -316,6 +316,11 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
         handler: 'slack-command-handler',
         id: 'SlackCommandHandler',
         description: 'Handler for Slack commands'
+      },
+      {
+        handler: 'slack-stream-event-handler',
+        id: 'SlackStreamEventHandler',
+        description: 'Handler for Slack events - Streams response' 
       }
     ].map((p) => {
       const prefix = `${props.stackName}-${p.id}`;
@@ -345,7 +350,8 @@ export class MyAmazonQSlackBotStack extends cdk.Stack {
             OIDC_REDIRECT_URL: oidcCallbackApi.url,
             KEY_ARN: kmsKey.keyArn,
             Q_USER_API_ROLE_ARN: qUserAPIRole.roleArn,
-            GATEWAY_IDC_APP_ARN: env.GatewayIdCAppARN
+            GATEWAY_IDC_APP_ARN: env.GatewayIdCAppARN,
+            CHATSTREAM_BUFFER_SIZE: env.ChatStreamBufferSize
           },
           role: slackLambdaExecutionRole,
           vpc

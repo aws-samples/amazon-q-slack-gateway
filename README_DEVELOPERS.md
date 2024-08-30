@@ -132,6 +132,19 @@ Let's now add your app into your workspace, this is required to generate the `Bo
 4. Choose `Edit`
 5. Replace the value of `OidcClientSecret`, you will find those values in the IdP app client configuration.
 
+#### 4.4 (Optional) Configure Slack app to use chat stream feature
+
+To enable the streaming response feature, we need to modify the Slack app.
+
+1. Login to your AWS console
+2. In your AWS account go to Cloudformation
+3. Copy the URL of the stack output ending with name : `SlackStreamEventHandlerApiEndpoint`.
+4. Open the Slack app settings (api.slack.com) and go to the Event Subscriptions section.
+5. In the Request URL block, select "change" and paste the copied URL into the "New Request URL" field.
+6. Save the changes.
+
+To revert to using the ChatSync feature, follow the same steps, but in step 3, copy the stack output with the name `SlackEventHandlerApiEndpoint` instead.
+
 ### Say hello
 > Time to say Hi!
 
