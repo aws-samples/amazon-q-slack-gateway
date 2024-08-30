@@ -13,7 +13,7 @@ import { makeLogger } from '@src/logging';
 import { getSignInBlocks } from '@helpers/amazon-q/amazon-q-helpers';
 import { UsersInfoResponse } from '@slack/web-api';
 import { FileElement } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
-import { AttachmentInput, ChatSyncCommandOutput } from '@aws-sdk/client-qbusiness';
+import { AttachmentInput, ChatSyncCommandOutput, ChatCommandOutput, ChatOutputStream, MetadataEvent, FailedAttachmentEvent } from '@aws-sdk/client-qbusiness';
 import { Credentials } from 'aws-sdk';
 
 const logger = makeLogger('slack-event-handler');
@@ -35,7 +35,8 @@ const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
   OIDC_REDIRECT_URL: getOrThrowIfEmpty(env.OIDC_REDIRECT_URL),
   KMS_KEY_ARN: getOrThrowIfEmpty(env.KEY_ARN),
   Q_USER_API_ROLE_ARN: getOrThrowIfEmpty(env.Q_USER_API_ROLE_ARN),
-  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN)
+  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN),
+  CHATSTREAM_BUFFER_SIZE: getOrThrowIfEmpty(env.CHATSTREAM_BUFFER_SIZE)
 });
 
 export type SlackEventsEnv = ReturnType<typeof processSlackEventsEnv>;
@@ -334,7 +335,7 @@ export const handler = async (
   const startTime = Date.now()
 
   const [output, slackMessage] = await Promise.all([
-    dependencies.callChatSyncCommand(
+    dependencies.callChatCommand(
       body.event.user,
       prompt,
       attachments,
@@ -352,6 +353,7 @@ export const handler = async (
   ]);
 
   if (output instanceof Error) {
+    console.log('Error generating QBusiness response')
     const errMsgWithDetails = `${ERROR_MSG}\n_${output.message}_`;
     const blocks = [getMarkdownBlock(errMsgWithDetails)];
 
@@ -366,42 +368,98 @@ export const handler = async (
     };
   }
 
-  if (!isEmpty(output.failedAttachments)) {
-    // Append error message for failed attachments to systemMessage
-    const fileErrorMessages = [];
-    for (const f of output.failedAttachments) {
-      if (f.status === 'FAILED') {
-        logger.debug(`Failed attachment: File ${f.name} - ${f.error?.errorMessage}`);
-        fileErrorMessages.push(` \u2022 ${f.name}: ${f.error?.errorMessage}`);
+  let buffer = '';
+  const bufferSize = Number(slackEventsEnv.CHATSTREAM_BUFFER_SIZE)
+  let failedAttachmentEvents: FailedAttachmentEvent[] = [];
+  let latestMetadataEvent: MetadataEvent = {}
+  
+  let outputData = {
+    conversationId: '',
+    systemMessageId: '',
+    outputText: '',
+    outputStream: [] as ChatOutputStream[],
+  };
+
+  
+  if (!output.outputStream) {
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        chat: { context, prompt, output: {
+          ...outputData,
+          $metadata: output.$metadata,
+        }}
+      })
+    };
+  }
+  
+  for await (const event of output.outputStream) {
+    if (event.textEvent) {
+      buffer += event.textEvent.systemMessage;
+      if (buffer.length >= bufferSize) {
+        try {
+          outputData.outputText += buffer;
+          await dependencies.updateSlackMessage(
+            slackEventsEnv,
+            slackMessage,
+            outputData.outputText,
+            dependencies.getResponseAsBlocks(outputData.outputText, event.textEvent.systemMessageId ?? '', [])
+          );
+          buffer = '';
+        } catch (error) {
+          let errMsgWithDetails = `${ERROR_MSG}`;
+          if (error instanceof Error) {
+            errMsgWithDetails = `${ERROR_MSG}\n_${error.message}_`;
+          }
+          const blocks = [getMarkdownBlock(errMsgWithDetails)];
+          await dependencies.updateSlackMessage(slackEventsEnv, slackMessage, errMsgWithDetails, blocks);
+          return {
+            statusCode: 200,
+            body: JSON.stringify({
+              chat: {
+                context,
+                prompt,
+                output: {
+                  ...outputData,
+                  $metadata: output.$metadata,
+                },
+                blocks: blocks
+              }})
+            }
+        }
       }
+    } else if (event.failedAttachmentEvent) {
+      failedAttachmentEvents.push(event.failedAttachmentEvent);
+    } else if (event.metadataEvent) {
+      latestMetadataEvent = event.metadataEvent;
+      outputData.conversationId = latestMetadataEvent.conversationId ?? '';
+      outputData.systemMessageId = latestMetadataEvent.systemMessageId ?? '';
     }
-    if (!isEmpty(fileErrorMessages)) {
-      output.systemMessage = `${
-        output.systemMessage
-      }\n\n*_Failed attachments:_*\n${fileErrorMessages.join('\n')}`;
-    }
+    outputData.outputStream.push(event);
+  }
+  
+  if (failedAttachmentEvents.length > 0) {
+    const fileErrorMessages = failedAttachmentEvents.map(f => 
+      `\u2022 ${f.attachment?.name}: ${f.attachment?.error?.errorMessage || 'Unknown error'}`
+    );
+    outputData.outputText += `\n\n*_Failed attachments:_*\n${fileErrorMessages.join('\n')}`;
   }
 
-  const contentBlocks = dependencies.getResponseAsBlocks(output.systemMessage ?? '', output.systemMessageId ?? '', output.sourceAttributions ?? [])
-  const feedbackBlocks = dependencies.getFeedbackBlocks(output)
-
+  outputData.outputText += buffer;
+  const contentBlocks = dependencies.getResponseAsBlocks(outputData.outputText, outputData.systemMessageId, latestMetadataEvent.sourceAttributions ?? []);
+  const feedbackBlocks = dependencies.getFeedbackBlocks(latestMetadataEvent);
 
   await Promise.all([
-    saveChannelMetadata(
-      channelKey,
-      output.conversationId ?? '',
-      output.systemMessageId ?? '',
-      dependencies,
-      slackEventsEnv
-    ),
-    saveMessageMetadata(output, dependencies, slackEventsEnv),
+    saveChannelMetadata(channelKey, outputData.conversationId, outputData.systemMessageId, dependencies, slackEventsEnv),
+    saveMessageMetadata(latestMetadataEvent, dependencies, slackEventsEnv),
     dependencies.updateSlackMessage(
       slackEventsEnv,
       slackMessage,
-      output.systemMessage,
+      outputData.outputText,
       contentBlocks
     )
   ]);
+
 
   await dependencies.sendSlackMessage(
     slackEventsEnv,
@@ -413,10 +471,19 @@ export const handler = async (
 
   console.log(`Total time: ${Date.now() - startTime} ms`)
 
+
   return {
     statusCode: 200,
     body: JSON.stringify({
-      chat: { context, prompt, output,  blocks: [...contentBlocks, ...feedbackBlocks] }
+      chat: {
+        context,
+        prompt,
+        output: {
+          ...outputData,
+          $metadata: output.$metadata,
+        },
+        blocks: [...contentBlocks, ...feedbackBlocks]
+      }
     })
-  };
+  }
 };
