@@ -23,7 +23,8 @@ const processSlackEventsEnv = (env: NodeJS.ProcessEnv) => ({
   OIDC_REDIRECT_URL: getOrThrowIfEmpty(env.OIDC_REDIRECT_URL),
   KMS_KEY_ARN: getOrThrowIfEmpty(env.KEY_ARN),
   Q_USER_API_ROLE_ARN: getOrThrowIfEmpty(env.Q_USER_API_ROLE_ARN),
-  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN)
+  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN),
+  AWS_IAM_IDC_REGION: getOrThrowIfEmpty(env.AWS_IAM_IDC_REGION)
 });
 
 export type SlackEventsEnv = ReturnType<typeof processSlackEventsEnv>;

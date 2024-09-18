@@ -2,13 +2,14 @@
 
 # Ensure required arguments are passed
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 <oidc_client_id> <trusted-token-issuer-arn> [application_name]"
+    echo "Usage: $0 <oidc_client_id> <trusted-token-issuer-arn> <iam_idc_region> [application_name]"
     exit 1
 else
     OIDC_CLIENT_ID="$1"
     TTI_ARN="$2"
-    if [ -n "$3" ]; then
-            APPLICATION_NAME="$3"
+    IDC_REGION="$3"
+    if [ -n "$4" ]; then
+            APPLICATION_NAME="$4"
         else
             APPLICATION_NAME="AmazonQSlackGateway"
         fi
@@ -22,7 +23,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Retrieve the IdC instance ARN.
-IDC_INSTANCE_ARN=$(aws sso-admin list-instances --query 'Instances[0].InstanceArn' | tr -d '""')
+IDC_INSTANCE_ARN=$(aws sso-admin list-instances --region $IDC_REGION --query 'Instances[0].InstanceArn' | tr -d '""')
 if [ $? -ne 0 ] || [ -z "$IDC_INSTANCE_ARN" ]; then
     echo "Error: IDC_INSTANCE_ARN is empty or failed to retrieve. Please check your AWS SSO configuration."
     exit 1
@@ -32,9 +33,9 @@ fi
 echo "Checking if the $APPLICATION_NAME exists..."
 APPLICATION_EXISTS=0
 GATEWAY_IDC_ARN=""
-RESPONSE=$(aws sso-admin list-applications --instance-arn $IDC_INSTANCE_ARN --query 'Applications[*].ApplicationArn' | tr -d '[",]')
+RESPONSE=$(aws sso-admin list-applications --instance-arn $IDC_INSTANCE_ARN --region $IDC_REGION --query 'Applications[*].ApplicationArn' | tr -d '[",]')
 for ARN in $RESPONSE; do
-    CURRENT_NAME=$(aws sso-admin describe-application --application-arn $ARN --query 'Name' | tr -d '"')
+    CURRENT_NAME=$(aws sso-admin describe-application --application-arn $ARN --region $IDC_REGION --query 'Name' | tr -d '"')
     if [ "$CURRENT_NAME" == "$APPLICATION_NAME" ]; then
         GATEWAY_IDC_ARN=$ARN
         APPLICATION_EXISTS=1
@@ -47,7 +48,7 @@ done
 CUSTOM_APPLICATION_PROVIDER_ARN="arn:aws:sso::aws:applicationProvider/custom"
 if [ $APPLICATION_EXISTS -eq 0 ]; then
   echo "Creating $APPLICATION_NAME..."
-    GATEWAY_IDC_ARN=$(aws sso-admin create-application --application-provider-arn $CUSTOM_APPLICATION_PROVIDER_ARN --instance-arn $IDC_INSTANCE_ARN --name "$APPLICATION_NAME" --query 'ApplicationArn' | tr -d '"')
+    GATEWAY_IDC_ARN=$(aws sso-admin create-application --application-provider-arn $CUSTOM_APPLICATION_PROVIDER_ARN --instance-arn $IDC_INSTANCE_ARN --name "$APPLICATION_NAME" --region $IDC_REGION --query 'ApplicationArn' | tr -d '"')
     if [ $? -ne 0 ] || [ -z "$GATEWAY_IDC_ARN" ]; then
         echo "Error: GATEWAY_IDC_ARN could not be created. Please check your inputs and AWS permissions."
         exit 1
@@ -56,7 +57,7 @@ if [ $APPLICATION_EXISTS -eq 0 ]; then
 fi
 
 # Disable assignment
-aws sso-admin put-application-assignment-configuration --application-arn $GATEWAY_IDC_ARN --no-assignment-required
+aws sso-admin put-application-assignment-configuration --application-arn $GATEWAY_IDC_ARN --region $IDC_REGION --no-assignment-required
 if [ $? -ne 0 ]; then
     echo "Failed to disable assignment for the application."
     exit 1
@@ -79,7 +80,7 @@ json_input='{
     },
     "GrantType": "urn:ietf:params:oauth:grant-type:jwt-bearer"
 }'
-aws sso-admin put-application-grant --cli-input-json "$json_input"
+aws sso-admin put-application-grant --region $IDC_REGION --cli-input-json "$json_input"
 if [ $? -ne 0 ]; then
     echo "Failed to put application grant."
     exit 1
@@ -107,14 +108,14 @@ json_input='{
     },
     "AuthenticationMethodType": "IAM"
 }'
-aws sso-admin put-application-authentication-method --cli-input-json "$json_input"
+aws sso-admin put-application-authentication-method --region $IDC_REGION --cli-input-json "$json_input"
 if [ $? -ne 0 ]; then
     echo "Failed to set authentication method."
     exit 1
 fi
 
 # Put application access scopes
-if ! aws sso-admin put-application-access-scope --application-arn $GATEWAY_IDC_ARN --scope "qbusiness:conversations:access"; then
+if ! aws sso-admin put-application-access-scope --application-arn $GATEWAY_IDC_ARN --scope "qbusiness:conversations:access" --region $IDC_REGION; then
     echo "Failed to set access scope for conversations."
     exit 1
 fi

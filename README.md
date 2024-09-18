@@ -57,19 +57,22 @@ Follow the instructions below to deploy the project to your own AWS account and 
 
 Create the client as a ['Web app'](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm). You will want to enable the 'Refresh Token' grant type, 'Allow everyone in your organization to access', and 'Federation Broker Mode'. Use a placeholder URL, like ```https://example.com```, for the redirect URI, as you will update this later (in step 3).
 
+Also verify that administrators are given ability to configure the Interaction Code grant type for apps and authorization servers. This is done in Okta under Settings > Account in the "Embedded widget sign-in support" panel. If "Interaction Code" is not enabled, select "Edit" and enable the option. Then browse to Security > API in Okta and verify that an authorization server is configured and that it has an Access Policy active with a Rule that has the "Interaction Code" grant type checked.
+
 #### 1.2 Create Trusted token issuer in IAM Identity Center
 
 Create trusted token issuer to trust tokens your Okta tenant using these instructions listed here - https://docs.aws.amazon.com/singlesignon/latest/userguide/using-apps-with-trusted-token-issuer.html.
 Or you can run the below script.
 
-For the script, you need to have the OIDC issuer URL and the AWS region in which you have your Q business application. To retrieve the OIDC issuer URL, go to Okta account console, click the left hamburger menu and open Security > API and copy the whole 'Issuer URI'. 
+For the script, you need to have the OIDC issuer URL and the AWS region in which you have your Q business application. To retrieve the OIDC issuer URL, go to Okta account console, click the left hamburger menu and open Security > API and copy the whole 'Issuer URI'. The IAM IdC region is typically the same region where your Amazon Q Business application has been created but that is not a requirement.
 
 The script will output trusted token issuer ARN (TTI_ARN) which you will use in the next step.
 
 ```
  export AWS_DEFAULT_REGION=<>
  OIDC_ISSUER_URL=<>
- bin/create-trusted-token-issuer.sh $OIDC_ISSUER_URL
+ AWS_IDC_REGION=<>
+ bin/create-trusted-token-issuer.sh $OIDC_ISSUER_URL $AWS_IDC_REGION
 ```
 
 #### 1.3 Create Customer managed application in IAM Identity Center
@@ -84,7 +87,8 @@ The script will output the gateway IdC application ARN (GATEWAY_IDC_ARN) which y
  export AWS_DEFAULT_REGION=<>
  OIDC_CLIENT_ID=<>
  TTI_ARN=<>
- bin/create-idc-application.sh $OIDC_CLIENT_ID $TTI_ARN
+ AWS_IDC_REGION=<>
+ bin/create-idc-application.sh $OIDC_CLIENT_ID $TTI_ARN $AWS_IDC_REGION
 ```
 
 ### 2. Deploy the stack
@@ -103,6 +107,7 @@ If you are a developer, and you want to build, deploy and/or publish the solutio
     5. `OIDCClientId`: The client ID of OIDC client you created in step 1.1.
     6. `OIDCIssuerURL`: The issuer URL of the OIDC client you created in step 1.1.
     7. `GatewayIdCAppARN`: The application arn of IdC customer managed application you created in step 1.3.
+    7. `AWSIAMIdCRegion`: The AWS region where the AWS IAM IdC instance is deployed.
     8. `ContextDaysToLive`: Just leave this as the default (90 days)
 
 Region | Easy Deploy Button | Template URL - use to upgrade existing stack to a new release
@@ -115,7 +120,7 @@ When your CloudFormation stack status is CREATE_COMPLETE, choose the **Outputs**
 
 ### 3. Update OIDC Client Redirect URL.
 
-Go the app client settings created in Okta (in step 1.1), and update the client redirect URL with exported value in Cloudformation stack for `OIDCCallbackEndpointExportedName`.
+Go the app client settings created in Okta (in step 1.1), and update the client redirect URL with exported value in CloudFormation stack for `OIDCCallbackEndpointExportedName`.
 
 ### 4. Configure your Slack application
 

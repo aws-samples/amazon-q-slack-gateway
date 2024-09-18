@@ -64,7 +64,8 @@ cat > /tmp/environment.json << _EOF
   "OIDCIdPName": "QOIDCIDPNAME",
   "OIDCClientId": "QOIDCCLIENTID",
   "OIDCIssuerURL": "QOIDCISSUERURL",
-  "GatewayIdCAppARN": "QGATEWAYIDCAPPARN"
+  "GatewayIdCAppARN": "QGATEWAYIDCAPPARN",
+  "AWSIAMIdCRegion": "AWSIAMIDCREGION"
 }
 _EOF
 
