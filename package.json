@@ -1,6 +1,6 @@
 {
   "name": "my_amazon_q_slack_bot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "bin": {
     "my_enterprise_q_slack_bot": "bin/my_amazon_q_slack_bot.js"
   },
