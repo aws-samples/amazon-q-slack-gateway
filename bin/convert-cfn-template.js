@@ -226,6 +226,11 @@ function parameterizeTemplate(template, lambdas) {
       Type: 'String',
       AllowedPattern: '^arn:aws[a-zA-Z-]*:[a-zA-Z0-9-]*:[a-z0-9-]*:[0-9]{12}:[a-zA-Z0-9:/._-]+$',
       Description: 'Q Business Slack Gateway IdC App Arn'
+    },
+    AWSIAMIdCRegion: {
+      Type: 'String',
+      Default: defaultQRegion,
+      Description: 'AWS IAM Identity Center (IdC) Region'
     }
   };
   for (let lambda of lambdas) {
@@ -241,6 +246,9 @@ function parameterizeTemplate(template, lambdas) {
     lambdaResource.Properties.Environment.Variables.OIDC_ISSUER_URL = { Ref: 'OIDCIssuerURL' };
     lambdaResource.Properties.Environment.Variables.GATEWAY_IDC_APP_ARN = {
       Ref: 'GatewayIdCAppARN'
+    };
+    lambdaResource.Properties.Environment.Variables.AWS_IAM_IDC_REGION = {
+      Ref: 'AWSIAMIdCRegion'
     };
   }
 }
