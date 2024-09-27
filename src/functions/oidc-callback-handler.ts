@@ -18,7 +18,8 @@ const processOIDCCallbackEventEnv = (env: NodeJS.ProcessEnv) => ({
   OIDC_CLIENT_SECRET_NAME: getOrThrowIfEmpty(env.OIDC_CLIENT_SECRET_NAME),
   KMS_KEY_ARN: getOrThrowIfEmpty(env.KEY_ARN),
   Q_USER_API_ROLE_ARN: getOrThrowIfEmpty(env.Q_USER_API_ROLE_ARN),
-  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN)
+  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN),
+  AWS_IAM_IDC_REGION: getOrThrowIfEmpty(env.AWS_IAM_IDC_REGION)
 });
 
 export const handler = async (
@@ -51,6 +52,7 @@ export const handler = async (
     region: oidcCallbackEventEnv.AMAZON_Q_REGION,
     qUserAPIRoleArn: oidcCallbackEventEnv.Q_USER_API_ROLE_ARN,
     gatewayIdCAppArn: oidcCallbackEventEnv.GATEWAY_IDC_APP_ARN,
+    awsIAMIdCRegion: oidcCallbackEventEnv.AWS_IAM_IDC_REGION,
     oidcRedirectUrl: oidcRedirectURL
   };
 

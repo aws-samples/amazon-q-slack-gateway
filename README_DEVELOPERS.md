@@ -30,9 +30,9 @@ Copy the GitHub repo to your computer. Either:
 
 3. You need to configure SAML and SCIM with Okta and IAM Identity Center. If you haven't configured, see [Configuring SAML and SCIM with Okta and IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html)
 
-4. You also need to have an existing, working Amazon Q business application integrated with IdC. If you haven't set one up yet, see [Creating an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/business-use-dg/create-app.html)
+4. You also need to have an existing, working Amazon Q Business application integrated with IdC. If you haven't set one up yet, see [Creating an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/business-use-dg/create-app.html)
 
-5. You need to have users subscribed to your Amazon Q business application, and are able to access Amazon Q Web Experience. If you haven't set one up yet, see [Subscribing users to an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/qbusiness-ug/adding-users-groups.html)
+5. You need to have users subscribed to your Amazon Q Business application, and are able to access Amazon Q Web Experience. If you haven't set one up yet, see [Subscribing users to an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/qbusiness-ug/adding-users-groups.html)
 
 
 ## Deploy the solution
@@ -43,19 +43,22 @@ Copy the GitHub repo to your computer. Either:
 
 Create the client as a ['Web app'](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm). You will want to enable the 'Refresh Token' grant type, 'Allow everyone in your organization to access', and 'Federation Broker Mode'. Use a placeholder URL, like ```https://example.com```, for the redirect URI, as you will update this later (in step 3).
 
+Also verify that administrators are given ability to configure the Interaction Code grant type for apps and authorization servers. This is done in Okta under Settings > Account in the "Embedded widget sign-in support" panel. If "Interaction Code" is not enabled, select "Edit" and enable the option. Then browse to Security > API in Okta and verify that an authorization server is configured and that it has an Access Policy active with a Rule that has the "Interaction Code" grant type checked.
+
 #### 1.2 Create Trusted token issuer in IAM Identity Center
 
 Create trusted token issuer to trust tokens from OIDC issuer URL using these instructions listed here - https://docs.aws.amazon.com/singlesignon/latest/userguide/using-apps-with-trusted-token-issuer.html.
 Or you can run the below script.
 
-For the script, you need to have the OIDC issuer URL and the AWS region in which you have your Q business application. To retrieve the OIDC issuer URL, go to Okta account console, click the left hamburger menu and open Security > API and copy the whole 'Issuer URI'.
+For the script, you need to have the OIDC issuer URL and the AWS region in which you have your AWS IAM Identity Center instance deployed. To retrieve the OIDC issuer URL, go to Okta account console, click the left hamburger menu and open Security > API and copy the whole 'Issuer URI'. The IAM IdC region is typically the same region where your Amazon Q Business application has been created but that is not a requirement.
 
 The script will output trusted token issuer ARN which you will use in the next step.
 
 ```
  export AWS_DEFAULT_REGION=<>
  OIDC_ISSUER_URL=<>
- bin/create-trusted-token-issuer.sh $OIDC_ISSUER_URL
+ AWS_IDC_REGION=<>
+ bin/create-trusted-token-issuer.sh $OIDC_ISSUER_URL $AWS_IDC_REGION
 ```
 
 #### 1.3 Create Customer managed application in IAM Identity Center
@@ -70,10 +73,11 @@ The script will output the IdC application ARN which you will use in the next st
  export AWS_DEFAULT_REGION=<>
  OIDC_CLIENT_ID=<>
  TTI_ARN=<>
- bin/create-idc-application.sh $OIDC_CLIENT_ID $TTI_ARN
+ AWS_IDC_REGION=<>
+ bin/create-idc-application.sh $OIDC_CLIENT_ID $TTI_ARN $AWS_IDC_REGION
 ```
 
-Before starting, you need to have an existing, working Amazon Q application. If you haven't set one up yet, see [Creating an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/business-use-dg/create-app.html)
+Before starting, you need to have an existing, working Amazon Q Business application. If you haven't set one up yet, see [Creating an Amazon Q application](https://docs.aws.amazon.com/amazonq/latest/business-use-dg/create-app.html)
 
 ### 2. Initialize and deploy the stack
 
@@ -84,7 +88,7 @@ Navigate into the project root directory and, in a bash shell, run:
 
 ### 3. Update OIDC Client Redirect URL.
 
-Go the app client settings created in Okta (in step 1.1), and update the client redirect URL with exported value in Cloudformation stack for `OIDCCallbackEndpointExportedName`.
+Go the app client settings created in Okta (in step 1.1), and update the client redirect URL with exported value in CloudFormation stack for `OIDCCallbackEndpointExportedName`.
 
 ### 4. Configure your Slack application
 
@@ -169,10 +173,9 @@ OUTPUTS
 Template URL: https://s3.us-east-1.amazonaws.com/yourbucketbasename-us-east-1/qslack-test/AmazonQSlackGateway.json
 CF Launch URL: https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.us-east-1.amazonaws.com/yourbucketbasename-us-east-1/qslack-test/AmazonQSlackGateway.json&stackName=AMAZON-Q-SLACK-GATEWAY
 Done
-``````
+```
 
 Follow the deployment directions in the main [README](./README.md), but use your own CF Launch URL instead of our pre-built templates (Launch Stack buttons). 
-
 
 ## Contributing, and reporting issues
 

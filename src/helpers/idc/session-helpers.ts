@@ -24,6 +24,7 @@ export type SessionManagerEnv = {
   region: string;
   qUserAPIRoleArn: string;
   gatewayIdCAppArn: string;
+  awsIAMIdCRegion: string;
 };
 
 type Session = {
@@ -271,7 +272,7 @@ const exchangeIdPTokenForIAMSessionCreds = async (
     assertion: idToken
   };
 
-  const idcResponse = await getSSOOIDCClient(env.region).createTokenWithIAM(
+  const idcResponse = await getSSOOIDCClient(env.awsIAMIdCRegion).createTokenWithIAM(
     createTokenWithIAMRequest
   );
 

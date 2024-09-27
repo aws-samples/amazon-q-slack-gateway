@@ -33,7 +33,8 @@ const processSlackInteractionsEnv = (env: NodeJS.ProcessEnv) => ({
   OIDC_REDIRECT_URL: getOrThrowIfEmpty(env.OIDC_REDIRECT_URL),
   KMS_KEY_ARN: getOrThrowIfEmpty(env.KEY_ARN),
   Q_USER_API_ROLE_ARN: getOrThrowIfEmpty(env.Q_USER_API_ROLE_ARN),
-  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN)
+  GATEWAY_IDC_APP_ARN: getOrThrowIfEmpty(env.GATEWAY_IDC_APP_ARN),
+  AWS_IAM_IDC_REGION: getOrThrowIfEmpty(env.AWS_IAM_IDC_REGION)
 });
 
 export type SlackInteractionsEnv = ReturnType<typeof processSlackInteractionsEnv>;
@@ -159,7 +160,8 @@ export const handler = async (
         kmsKeyArn: slackInteractionsEnv.KMS_KEY_ARN,
         region: slackInteractionsEnv.AMAZON_Q_REGION,
         qUserAPIRoleArn: slackInteractionsEnv.Q_USER_API_ROLE_ARN,
-        gatewayIdCAppArn: slackInteractionsEnv.GATEWAY_IDC_APP_ARN
+        gatewayIdCAppArn: slackInteractionsEnv.GATEWAY_IDC_APP_ARN,
+        awsIAMIdCRegion: slackInteractionsEnv.AWS_IAM_IDC_REGION
       };
 
       try {

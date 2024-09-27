@@ -13,6 +13,7 @@ export interface StackEnvironment {
   OIDCClientId: string;
   OIDCIssuerURL: string;
   GatewayIdCAppARN: string;
+  AWSIAMIdCRegion: string;
 }
 
 const app = new cdk.App();
@@ -45,6 +46,9 @@ if (environment.OIDCIssuerURL === undefined) {
 }
 if (environment.GatewayIdCAppARN === undefined) {
   throw new Error('GatewayIdCAppARN is required');
+}
+if (environment.AWSIAMIdCRegion === undefined) {
+  throw new Error('AWSIAMIdCRegion is required');
 }
 
 new MyAmazonQSlackBotStack(
