@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2024-09-27
+### Added
+Add support for cross-region IAM Identity Center (IDC) where the IDC instance is in a different region from the Amazon Q Business application. The IDC region can now be specified when deploying the gateway.
+
 ## [0.2.0] - 2024-05-28
 ### Added
 Add support for Q Business Apps integrated with IdC
