@@ -43,7 +43,7 @@ Copy the GitHub repo to your computer. Either:
 
 Create the client as a ['Web app'](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_oidc.htm). You will want to enable the 'Refresh Token' grant type, 'Allow everyone in your organization to access', and 'Federation Broker Mode'. Use a placeholder URL, like ```https://example.com```, for the redirect URI, as you will update this later (in step 3).
 
-Also verify that administrators are given ability to configure the Interaction Code grant type for apps and authorization servers. This is done in Okta under Settings > Account in the "Embedded widget sign-in support" panel. If "Interaction Code" is not enabled, select "Edit" and enable the option. Then browse to Security > API in Okta and verify that an authorization server is configured and that it has an Access Policy active with a Rule that has the "Interaction Code" grant type checked.
+Verify that administrators are given ability to configure the Interaction Code grant type for apps and authorization servers. See [Verify that the Interaction Code grant type is enabled](https://developer.okta.com/docs/guides/implement-grant-type/interactioncode/main/#verify-that-the-interaction-code-grant-type-is-enabled). Verify that "Interaction Code" is enabled for your "Authorization Server". See [Enable Interaction Code grant for your authorization server](https://developer.okta.com/docs/guides/implement-grant-type/interactioncode/main/#enable-interaction-code-grant-for-your-authorization-server)
 
 #### 1.2 Create Trusted token issuer in IAM Identity Center
 
