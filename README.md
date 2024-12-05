@@ -1,3 +1,6 @@
+# Deprecated
+*Q Business Slack integration* has been launched during re:invent 2024, please refer the [documentation](https://docs.aws.amazon.com/amazonq/latest/qbusiness-ug/slack.html) to know more. This project will no longer be maintained as it duplicates the functionality of official integration.
+
 # Slack gateway for Amazon Q Business
 
 | :zap: If you created a new Amazon Q Business application on or after April 30th, 2024, you can now set up a Slack gateway using the updated instructions provided below. These new Amazon Q Business applications are integrated with IAM Identity Center. The CloudFormation (CFN) template and the necessary steps have been updated to accommodate the setup of the Slack gateway for new applications.
