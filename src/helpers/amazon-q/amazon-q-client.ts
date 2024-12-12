@@ -17,24 +17,17 @@ import { Credentials } from 'aws-sdk';
 
 const logger = makeLogger('amazon-q-client');
 
-const amazonQClientBySlackUserId: { [key: string]: QBusinessClient } = {};
-
 export const getClient = (
   env: SlackEventsEnv,
   slackUserId: string,
   iamSessionCreds: Credentials
 ) => {
   logger.debug(`Initiating AmazonQ client with region ${env.AMAZON_Q_REGION}`);
-  if (amazonQClientBySlackUserId[slackUserId]) {
-    return amazonQClientBySlackUserId[slackUserId];
-  }
 
   const newClient = new QBusinessClient({
     credentials: iamSessionCreds,
     region: env.AMAZON_Q_REGION
   });
-
-  amazonQClientBySlackUserId[slackUserId] = newClient;
 
   return newClient;
 };
