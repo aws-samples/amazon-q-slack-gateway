@@ -147,12 +147,11 @@ export const finishSession = async (
   };
 
   const encodedCredentials = encodeCredentials(env.oidcClientId, clientSecret);
-  const authorizationHeader = `Basic ${encodedCredentials}`;
   const queryString = toQueryString(data);
   const response = await axios.post(tokenEndpoint, queryString, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: authorizationHeader
+      Authorization: encodedCredentials
     }
   });
 
@@ -241,12 +240,11 @@ const refreshToken = async (
 
   const queryString = toQueryString(data);
   const encodedCredentials = encodeCredentials(client_id, client_secret);
-  const authorizationHeader = `Basic ${encodedCredentials}`;
 
   const response = await axios.post(token_endpoint, queryString, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: authorizationHeader
+      Authorization: encodedCredentials
     }
   });
 
