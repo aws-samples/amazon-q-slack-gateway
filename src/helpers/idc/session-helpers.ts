@@ -143,15 +143,16 @@ export const finishSession = async (
   const data = {
     grant_type: 'authorization_code',
     code: authorization_code,
-    redirect_uri: env.oidcRedirectUrl,
-    client_id: env.oidcClientId,
-    client_secret: clientSecret
+    redirect_uri: env.oidcRedirectUrl
   };
 
+  const encodedCredentials = encodeCredentials(env.oidcClientId, clientSecret);
+  const authorizationHeader = `Basic ${encodedCredentials}`;
   const queryString = toQueryString(data);
   const response = await axios.post(tokenEndpoint, queryString, {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: authorizationHeader
     }
   });
 
@@ -235,16 +236,17 @@ const refreshToken = async (
 ) => {
   const data = {
     grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-    client_id: client_id,
-    client_secret: client_secret
+    refresh_token: refreshToken
   };
 
   const queryString = toQueryString(data);
+  const encodedCredentials = encodeCredentials(client_id, client_secret);
+  const authorizationHeader = `Basic ${encodedCredentials}`;
 
   const response = await axios.post(token_endpoint, queryString, {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: authorizationHeader
     }
   });
 
@@ -369,4 +371,9 @@ const hasSessionExpired = (expiration: string) => {
   expirationDate.setMinutes(expirationDate.getMinutes() - 15);
 
   return expirationDate <= now;
+};
+
+const encodeCredentials = (clientId: string, clientSecret: string): string => {
+  const encodedCredentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  return `Basic ${encodedCredentials}`;
 };
